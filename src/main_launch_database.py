@@ -3,10 +3,13 @@ main_path = os.getcwd()
 
 
 launch = False 
+
 Processing = True 
 Time_shift= False  
 log = False 
 scaler= False
+
+AED = True 
 
 
 fuel1 = "NH3"
@@ -44,4 +47,22 @@ if Processing == True :
     lenght = 500
     csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
     csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
-    Processing_0D(csv_d,csv_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 
+    data_d , data_r = Processing_0D(csv_d,csv_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 
+
+
+if AED == True : 
+    Err = pd.DataFrame()
+    
+    if Processing == False :  
+        data_d = pd.read_csv(os.path.join(Path,f"Processing_{name_d}.csv"))
+        data_r = pd.read_csv(os.path.join(Path,f"Processing_{name_r}.csv"))
+        
+    species_r = [col for col in data_r.columns if col.startswith("Y_")]
+        
+    for s in species_r : 
+        Err[s] = np.abs(data_d[s]-data_r[s])
+    plt.figure()
+    sns.boxplot(data=Err,showfliers=False)
+    plt.yscale("log")
+    plt.xticks(rotation=90)
+    plt.savefig(os.path.join(Path,"AED.png"))

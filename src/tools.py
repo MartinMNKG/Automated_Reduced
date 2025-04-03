@@ -8,6 +8,7 @@ import itertools
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import glob
+import seaborn as sns
 
 class MinMaxScaler:
     def fit(self, x):
@@ -150,7 +151,8 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
     
     all_data_d.to_csv(os.path.join(Path,f"Processing_{name_d}.csv"))
     all_data_r.to_csv(os.path.join(Path,f"Processing_{name_r}.csv"))
-            
+    
+    return all_data_d, all_data_r
     
 def Calc_ai_delay(time,temp) :
     loc_time = time
