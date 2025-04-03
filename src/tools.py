@@ -72,8 +72,7 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
         states.save(
             f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv"
         )
-
-    
+   
 def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_d,name_r,Path) : 
 
     all_data_d = pd.DataFrame()
@@ -164,3 +163,15 @@ def Calc_ai_delay(time,temp) :
 
 def Generate_commun_grid(time,lenght) :
     return np.linspace(min(time),max(time),lenght)
+
+def Calculate_AED(data_d,data_r,species,Path) : 
+    Err = pd.DataFrame()       
+    for s in species : 
+        Err[s] = np.abs(data_d[s]-data_r[s])
+    Err["T"] = np.abs(data_d["T"]-data_r["T"])
+    Err["IDT"] = np.abs(data_d["IDT"]-data_r["IDT"])
+    plt.figure()
+    sns.boxplot(data=Err,showfliers=False)
+    plt.yscale("log")
+    plt.xticks(rotation=90)
+    plt.savefig(os.path.join(Path,"AED.png"))
