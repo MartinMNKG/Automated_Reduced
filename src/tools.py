@@ -70,7 +70,7 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
             states.append(r.thermo.state, t=time)
             
         states.save(
-            f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv"
+            f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True
         )
    
 def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_d,name_r,Path) : 
@@ -127,7 +127,7 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         if log == True : 
             data_r[species_r]=data_r[species_r].apply(np.log)  
         
-        New_data_r["commun_grid"] = Generate_commun_grid(data_r["t"],lenght)
+        New_data_r["commun_grid"] = New_data_d["commun_grid"]
         
         for s in species_r : 
             int_func = interp1d(data_r["t"],data_r[s],fill_value='extrapolate')
@@ -195,5 +195,35 @@ def Calculate_ORCH(data_d,data_r,species,coefficient,eps):
     return np.sum(value_fitness_species),value_fitness_species
 
     
-    
-    
+
+def Calculate_PMO(data_d,data_r,integral,peak,case,lenght) : 
+    F1 = []
+    F2 = []
+    F3 = []
+    F4 = []
+    for c in range(len(case)) : 
+        
+        loc_data_d = data_d.iloc[c*lenght:c*lenght+lenght]
+        loc_data_r = data_r.iloc[c*lenght:c*lenght+lenght]
+        
+        loc_F1 = []
+        for si in integral : 
+            top1 = np.trapezoid((np.abs(loc_data_r[si]-loc_data_d[si])),loc_data_d["commun_grid"])
+            bot1 = np.trapezoid(np.abs(np.array(loc_data_r[si])), np.array(loc_data_d["commun_grid"]))
+            loc_F1.append((top1 / bot1) ** 2 if bot1 != 0 else 0)
+        
+        loc_F2 =[] 
+        for sp in peak : 
+            top2 = np.max(loc_data_d[sp])-np.max(loc_data_r[sp])
+            bot2 = np.max(loc_data_d[sp])
+            loc_F2.append((top2 / bot2) ** 2 if bot2 != 0 else 0)
+        
+        top3 = np.trapezoid(np.abs(loc_data_r["T"] - loc_data_d["T"]), loc_data_d["commun_grid"])
+        bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["commun_grid"])
+        F3.append((top3 / bot3) ** 2 if bot3 != 0 else 0)
+        
+        top4 = loc_data_r["IDT"][0] - loc_data_d["IDT"][0]
+        bot4 = loc_data_d["IDT"][0]
+        F4.append((top4 / bot4) ** 2 if bot4 != 0 else 0)
+        
+        return F1, F2, F3, F4

@@ -2,9 +2,9 @@ from tools import *
 main_path = os.getcwd()
 
 
-launch = False 
+launch = True 
 
-Processing = False 
+Processing = True 
 Time_shift= False  
 log = False 
 scaler= False
@@ -35,9 +35,15 @@ pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1000,2000,5).tolist()
 phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
-tmax = 0.05
+
+tmax = 0.1
 dt= 1e-6
+lenght = 500
 case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
+    
+
+
+
 if launch == True : 
     #Launch 0D reactor Base
     Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_d,Path)
@@ -45,7 +51,6 @@ if launch == True :
 
 if Processing == True : 
     #Processing Database
-    lenght = 500
     csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
     csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
     data_d , data_r = Processing_0D(csv_d,csv_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 
@@ -68,21 +73,26 @@ if fitness == True :
     Species_ORCH = [col for col in data_r.columns if col.startswith("Y_")]
     eps = 1e-12
     coefficients_ORCH = {
-        "NO": 6.0,
-        "NH": 3.5,
-        "NH2": 3.5,
-        "NNH": 5.0,
-        "H2": 3.0,
-        "NH3": 3.0,
-        "O2": 3.0,
-        "OH": 3.0,
-        "O": 3.0,
-        "H": 3.0
+        "Y_NO": 6.0,
+        "Y_NH": 3.5,
+        "Y_NH2": 3.5,
+        "Y_NNH": 5.0,
+        "Y_H2": 3.0,
+        "Y_NH3": 3.0,
+        "Y_O2": 3.0,
+        "Y_Y_OH": 3.0,
+        "Y_O": 3.0,
+        "Y_H": 3.0
 
     }
     Err_Orch, Err_Orch_species = Calculate_ORCH(data_d,data_r,Species_ORCH,coefficients_ORCH,eps)
-    print(Err_Orch)
+    print(f"Fitness Orch = {Err_Orch}")
     
     
+    #PMO : 
+    Intergrate_Species =["Y_H2", "Y_NH3", "Y_O2", "Y_OH","Y_NO", 'Y_H2O','Y_NO2', 'Y_N2O','Y_N2']
+    Peak_species = ['Y_H', 'Y_O', 'Y_HO2', 'Y_N', 'Y_N2H2', 'Y_HNO',"Y_NH","Y_NH2","Y_NNH"]
+    F1 ,F2, F3 ,F4 =Calculate_PMO(data_d,data_r,Intergrate_Species,Peak_species,case_0D,lenght) 
+    print(f"Fitness PMO = {np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4)):.3e}")
     
     
