@@ -10,6 +10,7 @@ log = False
 scaler= False
 
 AED = True 
+fitness = True 
 
 
 fuel1 = "NH3"
@@ -55,6 +56,33 @@ if AED == True :
         data_d = pd.read_csv(os.path.join(Path,f"Processing_{name_d}.csv"))
         data_r = pd.read_csv(os.path.join(Path,f"Processing_{name_r}.csv"))
     
-    species= [col for col in data_r.columns if col.startswith("Y_")]
-    species = ["Y_NH3","Y_H2","Y_H2O","Y_NO"]
-    Calculate_AED(data_d,data_r,species,Path)
+    species_AED= [col for col in data_r.columns if col.startswith("Y_")]
+    
+    species_AED = ["Y_NH3","Y_H2","Y_H2O","Y_NO"]
+    Calculate_AED(data_d,data_r,species_AED,Path)
+    
+
+if fitness == True :  
+    
+    # ORCH 
+    Species_ORCH = [col for col in data_r.columns if col.startswith("Y_")]
+    eps = 1e-12
+    coefficients_ORCH = {
+        "NO": 6.0,
+        "NH": 3.5,
+        "NH2": 3.5,
+        "NNH": 5.0,
+        "H2": 3.0,
+        "NH3": 3.0,
+        "O2": 3.0,
+        "OH": 3.0,
+        "O": 3.0,
+        "H": 3.0
+
+    }
+    Err_Orch, Err_Orch_species = Calculate_ORCH(data_d,data_r,Species_ORCH,coefficients_ORCH,eps)
+    print(Err_Orch)
+    
+    
+    
+    

@@ -174,4 +174,26 @@ def Calculate_AED(data_d,data_r,species,Path) :
     sns.boxplot(data=Err,showfliers=False)
     plt.yscale("log")
     plt.xticks(rotation=90)
+    plt.tight_layout()
     plt.savefig(os.path.join(Path,"AED.png"))
+    
+    
+def Calculate_ORCH(data_d,data_r,species,coefficient,eps): 
+    Err_ORCH = np.abs(data_d[species]-data_r[species])/np.maximum(np.abs(data_d[species]),eps)
+    mask = np.abs(data_d[species])<eps
+    Err_ORCH[mask] = 0
+    
+    value_fitness_species =[]
+    for s in species : 
+        if s in coefficient : 
+            k = coefficient[s]
+        else :
+            k = 0.05
+        
+        value_fitness_species.append(k*np.sum(Err_ORCH[s]))
+    
+    return np.sum(value_fitness_species),value_fitness_species
+
+    
+    
+    
