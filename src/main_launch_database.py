@@ -30,7 +30,7 @@ _gas_red_copy = ct.Solution(Reduced_file)
 ## 0D reactor ##
 ################
 Name_Folder = "0D"
-Path = Create_0D_directory(main_path,Name_Folder)
+Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1000,2000,5).tolist()
 phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
