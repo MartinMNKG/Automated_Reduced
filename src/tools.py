@@ -31,7 +31,7 @@ def generate_test_cases_bifuel(pressure_range,temp_range, second_param,mixture):
     
     return test_cases
 
-def Create_0D_directory(main_path,name) : 
+def Create_directory(main_path,name) : 
     
     dossier = os.path.join(main_path,f"{name}")
     if not os.path.exists(dossier): 
@@ -42,7 +42,7 @@ def Create_0D_directory(main_path,name) :
     return dossier
 
 def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
-    dossier = Create_0D_directory(dossier,type)
+    dossier = Create_directory(dossier,type)
     for case in case_0D :
         pressure, temperature, equivalence_ratio,mixture = case
         fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
@@ -72,6 +72,33 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
         states.save(
             f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True
         )
+
+def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) : 
+    dossier = Create_directory(dossier,type)
+    for case in case_1D : 
+        pressure, temperature, equivalence_ratio,mixture = case
+        fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
+
+        t_gas.set_equivalence_ratio(equivalence_ratio,fuel_mix,oxidizer)
+        t_gas.TP = temperature,pressure
+        
+        width = 0.05
+        
+        f = ct.FreeFlame(t_gas,width=width)
+
+
+        # Rafinement de la flamme
+        f.set_refine_criteria(ratio=3, slope=0.06, curve=0.12)
+        f.inlet.T = temperature
+        f.inlet.Y = t_gas.Y
+        
+        
+        # Résoudre la flamme
+        f.solve(loglevel=1, auto=True)
+        
+        f.save(f"{dossier}/1D_PMX_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True)
+
+
    
 def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_d,name_r,Path) : 
 
