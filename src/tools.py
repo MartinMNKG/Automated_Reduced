@@ -94,12 +94,12 @@ def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) :
         
         
         # Résoudre la flamme
-        f.solve(loglevel=1, auto=True)
+        f.solve(loglevel=0, auto=True)
         
         f.save(f"{dossier}/1D_PMX_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True)
 
 
-   
+
 def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_d,name_r,Path) : 
 
     all_data_d = pd.DataFrame()
@@ -120,11 +120,14 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         if log == True : 
             data_d[species_d]=data_d[species_d].apply(np.log)  
         
-        New_data_d["commun_grid"] = Generate_commun_grid(data_d["t"],lenght)
+        New_data_d["common_grid"] = Generate_common_grid(data_d["t"],lenght)
         
         for s in species_d : 
             int_func = interp1d(data_d["t"],data_d[s],fill_value='extrapolate')
-            New_data_d[s] = int_func(New_data_d["commun_grid"])
+            New_data_d[s] = int_func(New_data_d["common_grid"])
+            
+        int_func = interp1d(data_d["t"],data_d["T"],fill_value='extrapolate')
+        New_data_d["T"] = int_func(New_data_d["common_grid"])
         
         all_scl =[]
         if scaler== True : 
@@ -154,11 +157,14 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         if log == True : 
             data_r[species_r]=data_r[species_r].apply(np.log)  
         
-        New_data_r["commun_grid"] = New_data_d["commun_grid"]
+        New_data_r["common_grid"] = New_data_d["common_grid"]
         
         for s in species_r : 
             int_func = interp1d(data_r["t"],data_r[s],fill_value='extrapolate')
-            New_data_r[s] = int_func(New_data_d["commun_grid"])
+            New_data_r[s] = int_func(New_data_d["common_grid"])
+            
+        int_func = interp1d(data_r["t"],data_r["T"],fill_value='extrapolate')
+        New_data_r["T"] = int_func(New_data_d["common_grid"])
             
         if scaler== True : 
             for s in species_r : 
@@ -178,7 +184,96 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
     all_data_d.to_csv(os.path.join(Path,f"Processing_{name_d}.csv"))
     all_data_r.to_csv(os.path.join(Path,f"Processing_{name_r}.csv"))
     
+    
     return all_data_d, all_data_r
+ 
+def Processing_1D(list_csv_d,list_csv_r,cases,grid_shift,log,scaler,lenght,name_d,name_r,Path)  : 
+    
+    all_data_d = pd.DataFrame()
+    all_data_r = pd.DataFrame()
+    
+    list_csv = zip(list_csv_d,list_csv_r)
+    for csv_d,csv_r in list_csv : 
+    
+        pressure, temperature, equivalence_ratio,mixture = cases[list_csv_d.index(csv_d)]
+        New_data_d = pd.DataFrame()
+        data_d=pd.read_csv(csv_d)
+        species_d = [col for col in data_d.columns if col.startswith("Y_")]
+        data_d_shift_1D = shift_1D(data_d["grid"],data_d["T"])
+        
+        if grid_shift == True : 
+            data_d["grid"] = data_d["grid"] - data_d_shift_1D
+        
+        if log == True : 
+            data_d[species_d]=data_d[species_d].apply(np.log)  
+        
+        New_data_d["common_grid"] = Generate_common_grid(data_d["grid"],lenght)
+        
+        for s in species_d : 
+            int_func = interp1d(data_d["grid"],data_d[s],fill_value='extrapolate')
+            New_data_d[s] = int_func(New_data_d["common_grid"])
+            
+        int_func = interp1d(data_d["grid"],data_d["T"],fill_value='extrapolate')
+        New_data_d["T"] = int_func(New_data_d["common_grid"])
+        
+        all_scl =[]
+        if scaler== True : 
+            for s in species_d : 
+                scl = MinMaxScaler()
+                scl.fit(New_data_d[s])
+                New_data_d[s] = scl.transform(New_data_d[s])
+                all_scl.append(scl)
+                
+       
+        
+        New_data_d["velocity"] = data_d["velocity"][0]
+        New_data_d["P_Init"]  = pressure
+        New_data_d["T_Init"]  = temperature
+        New_data_d["phi_ini"]  =   equivalence_ratio  
+        New_data_d["mixt_init"] = mixture     
+        
+        all_data_d = pd.concat([all_data_d,New_data_d],ignore_index=True) 
+        
+        
+        New_data_r = pd.DataFrame()
+        data_r=pd.read_csv(csv_r)
+        species_r = [col for col in data_r.columns if col.startswith("Y_")]
+        data_r_shift_1D = shift_1D(data_r["grid"],data_r["T"])
+        
+        if grid_shift == True : 
+            data_r["grid"] = data_r["grid"] - data_r_shift_1D
+            
+        if log == True : 
+            data_r[species_r]=data_r[species_r].apply(np.log)  
+        
+        New_data_r["common_grid"] = New_data_d["common_grid"]
+        
+        for s in species_r : 
+            int_func = interp1d(data_r["grid"],data_r[s],fill_value='extrapolate')
+            New_data_r[s] = int_func(New_data_d["common_grid"])
+            
+        int_func = interp1d(data_r["grid"],data_r["T"],fill_value='extrapolate')
+        New_data_r["T"] = int_func(New_data_d["common_grid"])
+        
+        if scaler== True : 
+            for s in species_r : 
+                scl = all_scl[species_d.index(s)]
+                New_data_r[s] = scl.transform(New_data_r[s])
+        
+        
+        
+        New_data_r["IDT"] = data_r["velocity"][0]
+        New_data_r["P_Init"]  = pressure
+        New_data_r["T_Init"]  = temperature
+        New_data_r["phi_ini"]  =   equivalence_ratio  
+        New_data_r["mixt_init"] = mixture  
+    
+        all_data_r = pd.concat([all_data_r,New_data_r],ignore_index=True)    
+        
+    all_data_d.to_csv(os.path.join(Path,f"Processing_{name_d}.csv"))
+    all_data_r.to_csv(os.path.join(Path,f"Processing_{name_r}.csv"))
+
+    return all_data_d , all_data_r
     
 def Calc_ai_delay(time,temp) :
     loc_time = time
@@ -188,7 +283,14 @@ def Calc_ai_delay(time,temp) :
     output=loc_time[ign_pos]
     return output
 
-def Generate_commun_grid(time,lenght) :
+def shift_1D(grid: list, T: list) -> list:
+    gradient = np.gradient(T, grid)
+    indice_gradient = np.argmax(gradient)
+    shift_grid = grid - grid.loc[indice_gradient]
+
+    return shift_grid
+
+def Generate_common_grid(time,lenght) :
     return np.linspace(min(time),max(time),lenght)
 
 def Calculate_AED(data_d,data_r,species,Path) : 
@@ -235,8 +337,8 @@ def Calculate_PMO(data_d,data_r,integral,peak,case,lenght) :
         
         loc_F1 = []
         for si in integral : 
-            top1 = np.trapezoid((np.abs(loc_data_r[si]-loc_data_d[si])),loc_data_d["commun_grid"])
-            bot1 = np.trapezoid(np.abs(np.array(loc_data_r[si])), np.array(loc_data_d["commun_grid"]))
+            top1 = np.trapezoid((np.abs(loc_data_r[si]-loc_data_d[si])),loc_data_d["common_grid"])
+            bot1 = np.trapezoid(np.abs(np.array(loc_data_r[si])), np.array(loc_data_d["common_grid"]))
             loc_F1.append((top1 / bot1) ** 2 if bot1 != 0 else 0)
         
         loc_F2 =[] 
@@ -245,8 +347,8 @@ def Calculate_PMO(data_d,data_r,integral,peak,case,lenght) :
             bot2 = np.max(loc_data_d[sp])
             loc_F2.append((top2 / bot2) ** 2 if bot2 != 0 else 0)
         
-        top3 = np.trapezoid(np.abs(loc_data_r["T"] - loc_data_d["T"]), loc_data_d["commun_grid"])
-        bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["commun_grid"])
+        top3 = np.trapezoid(np.abs(loc_data_r["T"] - loc_data_d["T"]), loc_data_d["common_grid"])
+        bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["common_grid"])
         F3.append((top3 / bot3) ** 2 if bot3 != 0 else 0)
         
         top4 = loc_data_r["IDT"][0] - loc_data_d["IDT"][0]
