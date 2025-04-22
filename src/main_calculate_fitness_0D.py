@@ -7,7 +7,7 @@ data_d = pd.read_csv("/work/kotlarcm/WORK/Automated_Reduced/0D/Processing_Detail
 data_r = pd.read_csv("/work/kotlarcm/WORK/Automated_Reduced/0D/Processing_Reduced.csv")
 
 nb_case_0D = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
-lenght= data_d.shape[0]/ nb_case_0D
+lenght= int(data_d.shape[0]/ nb_case_0D)
 
    
 species_AED= [col for col in data_r.columns if col.startswith("Y_")]
@@ -35,10 +35,10 @@ Err_Orch, Err_Orch_species = Calculate_ORCH(data_d,data_r,Species_ORCH,coefficie
 print(f"Fitness Orch = {Err_Orch}")
 
 
-# #PMO : 
-# Intergrate_Species =["Y_H2", "Y_NH3", "Y_O2", "Y_OH","Y_NO", 'Y_H2O','Y_NO2', 'Y_N2O','Y_N2']
-# Peak_species = ['Y_H', 'Y_O', 'Y_HO2', 'Y_N', 'Y_N2H2', 'Y_HNO',"Y_NH","Y_NH2","Y_NNH"]
-# F1 ,F2, F3 ,F4 =Calculate_PMO(data_d,data_r,Intergrate_Species,Peak_species,case_0D,lenght) 
-# print(f"Fitness PMO = {np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4)):.3e}")
+#PMO : 
+Intergrate_Species =["Y_H2", "Y_NH3", "Y_O2", "Y_OH","Y_NO", 'Y_H2O','Y_NO2', 'Y_N2O','Y_N2']
+Peak_species = ['Y_H', 'Y_O', 'Y_HO2', 'Y_N', 'Y_N2H2', 'Y_HNO',"Y_NH","Y_NH2","Y_NNH"]
+Err_PMO , F1 ,F2, F3 ,F4 =Calculate_PMO(data_d,data_r,Intergrate_Species,Peak_species,nb_case_0D,lenght,Path) 
+print(f"Fitness PMO = {Err_PMO:.3e}")
 
     

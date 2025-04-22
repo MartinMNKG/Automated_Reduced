@@ -334,12 +334,12 @@ def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path):
 
     
 
-def Calculate_PMO(data_d,data_r,integral,peak,case,lenght) : 
+def Calculate_PMO(data_d,data_r,integral,peak,case,lenght,Path) : 
     F1 = []
     F2 = []
     F3 = []
     F4 = []
-    for c in range(len(case)) : 
+    for c in range(case) : 
         
         loc_data_d = data_d.iloc[c*lenght:c*lenght+lenght]
         loc_data_r = data_r.iloc[c*lenght:c*lenght+lenght]
@@ -363,5 +363,6 @@ def Calculate_PMO(data_d,data_r,integral,peak,case,lenght) :
         top4 = loc_data_r["IDT"][0] - loc_data_d["IDT"][0]
         bot4 = loc_data_d["IDT"][0]
         F4.append((top4 / bot4) ** 2 if bot4 != 0 else 0)
-        
-        return F1, F2, F3, F4
+    Err_PMO = np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4))
+    
+    return Err_PMO, F1, F2, F3, F4
