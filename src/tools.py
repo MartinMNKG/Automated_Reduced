@@ -41,8 +41,9 @@ def Create_directory(main_path,name) :
         pass
     return dossier
 
-def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
+def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier) : 
     dossier = Create_directory(dossier,type)
+    all_df = pd.DataFrame()
     for case in case_0D :
         pressure, temperature, equivalence_ratio,mixture = case
         fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
@@ -71,7 +72,7 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier):
             
         states.save(
             f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True
-        )
+        )      
 
 def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) : 
     dossier = Create_directory(dossier,type)
@@ -142,8 +143,8 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         New_data_d["IDT"] = IDT_d
         New_data_d["P_Init"]  = pressure
         New_data_d["T_Init"]  = temperature
-        New_data_d["phi_ini"]  =   equivalence_ratio  
-        New_data_d["mixt_init"] = mixture           
+        New_data_d["Phi_Init"]  =   equivalence_ratio  
+        New_data_d["Mixt_Init"] = mixture           
         
         all_data_d = pd.concat([all_data_d,New_data_d],ignore_index=True)
     
@@ -176,8 +177,8 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         New_data_r["IDT"] = IDT_r
         New_data_r["P_Init"]  = pressure
         New_data_r["T_Init"]  = temperature
-        New_data_r["phi_ini"]  =   equivalence_ratio  
-        New_data_r["mixt_init"] = mixture  
+        New_data_r["Phi_Init"]  =   equivalence_ratio  
+        New_data_r["Mixt_Init"] = mixture  
     
         all_data_r = pd.concat([all_data_r,New_data_r],ignore_index=True)     
     
@@ -229,8 +230,8 @@ def Processing_1D(list_csv_d,list_csv_r,cases,grid_shift,log,scaler,lenght,name_
         New_data_d["velocity"] = data_d["velocity"][0]
         New_data_d["P_Init"]  = pressure
         New_data_d["T_Init"]  = temperature
-        New_data_d["phi_ini"]  =   equivalence_ratio  
-        New_data_d["mixt_init"] = mixture     
+        New_data_d["Phi_Init"]  =   equivalence_ratio  
+        New_data_d["Mixt_Init"] = mixture     
         
         all_data_d = pd.concat([all_data_d,New_data_d],ignore_index=True) 
         
@@ -265,8 +266,8 @@ def Processing_1D(list_csv_d,list_csv_r,cases,grid_shift,log,scaler,lenght,name_
         New_data_r["IDT"] = data_r["velocity"][0]
         New_data_r["P_Init"]  = pressure
         New_data_r["T_Init"]  = temperature
-        New_data_r["phi_ini"]  =   equivalence_ratio  
-        New_data_r["mixt_init"] = mixture  
+        New_data_r["Phi_Init"]  =   equivalence_ratio  
+        New_data_r["Mixt_Init"] = mixture  
     
         all_data_r = pd.concat([all_data_r,New_data_r],ignore_index=True)    
         
@@ -299,6 +300,7 @@ def Calculate_AED(data_d,data_r,species,Path) :
         Err[s] = np.abs(data_d[s]-data_r[s])
     Err["T"] = np.abs(data_d["T"]-data_r["T"])
     Err["IDT"] = np.abs(data_d["IDT"]-data_r["IDT"])
+    
     plt.figure()
     sns.boxplot(data=Err,showfliers=False)
     plt.yscale("log")
@@ -307,7 +309,7 @@ def Calculate_AED(data_d,data_r,species,Path) :
     plt.savefig(os.path.join(Path,"AED.png"))
     
     
-def Calculate_ORCH(data_d,data_r,species,coefficient,eps): 
+def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path): 
     Err_ORCH = np.abs(data_d[species]-data_r[species])/np.maximum(np.abs(data_d[species]),eps)
     mask = np.abs(data_d[species])<eps
     Err_ORCH[mask] = 0
@@ -320,6 +322,13 @@ def Calculate_ORCH(data_d,data_r,species,coefficient,eps):
             k = 0.05
         
         value_fitness_species.append(k*np.sum(Err_ORCH[s]))
+    
+    plt.figure()
+    sns.boxplot(data=Err_ORCH,showfliers=False)
+    plt.yscale("log")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"ORCH.png"))
     
     return np.sum(value_fitness_species),value_fitness_species
 
