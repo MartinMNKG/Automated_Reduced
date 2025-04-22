@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 token
+mod.sh
 # Ignore virtual environments
 .venv/
 env/
