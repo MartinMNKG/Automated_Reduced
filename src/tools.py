@@ -349,12 +349,14 @@ def Calculate_PMO(data_d,data_r,integral,peak,case,lenght,Path) :
             top1 = np.trapezoid((np.abs(loc_data_r[si]-loc_data_d[si])),loc_data_d["common_grid"])
             bot1 = np.trapezoid(np.abs(np.array(loc_data_r[si])), np.array(loc_data_d["common_grid"]))
             loc_F1.append((top1 / bot1) ** 2 if bot1 != 0 else 0)
+        F1.append(loc_F1)
         
         loc_F2 =[] 
         for sp in peak : 
             top2 = np.max(loc_data_d[sp])-np.max(loc_data_r[sp])
             bot2 = np.max(loc_data_d[sp])
             loc_F2.append((top2 / bot2) ** 2 if bot2 != 0 else 0)
+        F2.append(loc_F2)
         
         top3 = np.trapezoid(np.abs(loc_data_r["T"] - loc_data_d["T"]), loc_data_d["common_grid"])
         bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["common_grid"])
@@ -364,5 +366,44 @@ def Calculate_PMO(data_d,data_r,integral,peak,case,lenght,Path) :
         bot4 = loc_data_d["IDT"][0]
         F4.append((top4 / bot4) ** 2 if bot4 != 0 else 0)
     Err_PMO = np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4))
+
+    # Box plot
+    plt.figure(figsize=(12, 6))
+    plt.rcParams.update({'font.size': 18}) 
+    plt.boxplot(np.array(F1), labels=integral, vert=True)
+    plt.ylabel(r'$F_1(Y_i)$')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"F1.png"))
+    
+    plt.figure(figsize=(12, 6))
+    plt.rcParams.update({'font.size': 18}) 
+    plt.boxplot(np.array(F2), labels=peak, vert=True)
+    plt.ylabel(r'$F_2(Y_i)$')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"F2.png"))
+    
+    plt.figure(figsize=(12, 6))
+    plt.rcParams.update({'font.size': 18}) 
+    plt.boxplot(np.array(F3), labels=["T"], vert=True)
+    plt.ylabel(r'$F_3(T)$')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"F3.png"))
+    
+    plt.figure(figsize=(12, 6))
+    plt.rcParams.update({'font.size': 18}) 
+    plt.boxplot(np.array(F4), labels=["IDT"], vert=True)
+    plt.ylabel(r'$F_4(T)$')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"F4.png"))
+    
+    
     
     return Err_PMO, F1, F2, F3, F4
