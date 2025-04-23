@@ -208,7 +208,8 @@ def Processing_1D(list_csv_d,list_csv_r,cases,grid_shift,log,scaler,lenght,name_
         if log == True : 
             data_d[species_d]=data_d[species_d].apply(np.log)  
         
-        New_data_d["common_grid"] = Generate_common_grid(data_d["grid"],lenght)
+        ind = find_convergence_index(data_d["T"])
+        New_data_d["common_grid"] = Generate_common_grid(data_d["grid"].iloc[:ind],data_d["T"].iloc[:ind],lenght)
         
         for s in species_d : 
             int_func = interp1d(data_d["grid"],data_d[s],fill_value='extrapolate')
@@ -291,12 +292,12 @@ def shift_1D(grid: list, T: list) -> list:
 
     return shift_grid
 
-def Generate_common_grid(time,temp,lenght) :
+def Generate_common_grid(grid,temp,lenght) :
     
-    gradient = np.abs(np.gradient(temp,time))
-    density =  gradient / np.trapz(gradient,time)
-    F = cumtrapz(density,time,initial=0)
-    inv_cdf = interp1d( F,time)
+    gradient = np.abs(np.gradient(temp,grid))
+    density =  gradient / np.trapz(gradient,grid)
+    F = cumtrapz(density,grid,initial=0)
+    inv_cdf = interp1d( F,grid)
     x_vals = np.linspace(0,F[-1],lenght)
     return inv_cdf(x_vals)
     # return np.logspace(min(time),max(time),lenght)
