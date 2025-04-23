@@ -38,7 +38,7 @@ mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
 dt= 1e-6
-lenght = 500
+lenght = 1000
 case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
 

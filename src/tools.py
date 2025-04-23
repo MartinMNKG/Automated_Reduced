@@ -7,6 +7,7 @@ import time
 import itertools
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from scipy.integrate import cumtrapz
 import glob
 import seaborn as sns
 
@@ -99,8 +100,6 @@ def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) :
         
         f.save(f"{dossier}/1D_PMX_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True)
 
-
-
 def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_d,name_r,Path) : 
 
     all_data_d = pd.DataFrame()
@@ -121,7 +120,8 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
         if log == True : 
             data_d[species_d]=data_d[species_d].apply(np.log)  
         
-        New_data_d["common_grid"] = Generate_common_grid(data_d["t"],lenght)
+        ind = find_convergence_index(data_d["T"])
+        New_data_d["common_grid"] = Generate_common_grid(data_d["t"].iloc[:ind],data_d["T"].iloc[:ind],lenght)
         
         for s in species_d : 
             int_func = interp1d(data_d["t"],data_d[s],fill_value='extrapolate')
@@ -139,7 +139,7 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
                 all_scl.append(scl)
     
         
-        New_data_d["T"]= data_d["T"]
+        
         New_data_d["IDT"] = IDT_d
         New_data_d["P_Init"]  = pressure
         New_data_d["T_Init"]  = temperature
@@ -173,7 +173,7 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
                 New_data_r[s] = scl.transform(New_data_r[s])
         
         
-        New_data_r["T"]= data_r["T"]
+        
         New_data_r["IDT"] = IDT_r
         New_data_r["P_Init"]  = pressure
         New_data_r["T_Init"]  = temperature
@@ -291,8 +291,23 @@ def shift_1D(grid: list, T: list) -> list:
 
     return shift_grid
 
-def Generate_common_grid(time,lenght) :
-    return np.linspace(min(time),max(time),lenght)
+def Generate_common_grid(time,temp,lenght) :
+    
+    gradient = np.abs(np.gradient(temp,time))
+    density =  gradient / np.trapz(gradient,time)
+    F = cumtrapz(density,time,initial=0)
+    inv_cdf = interp1d( F,time)
+    x_vals = np.linspace(0,F[-1],lenght)
+    return inv_cdf(x_vals)
+    # return np.logspace(min(time),max(time),lenght)
+
+def find_convergence_index(series: pd.Series, window: int = 5, tolerance: float = 1e-2) -> int:
+    final_value = series.iloc[-1]
+    for i in range(len(series) - window):
+        window_values = series.iloc[i:i + window]
+        if np.all(np.abs(window_values - final_value) <= tolerance):
+            return i + window  # Return the index where convergence ends
+    return len(series)  # No convergence detected
 
 def Calculate_AED(data_d,data_r,species,Path) : 
     Err = pd.DataFrame()       
@@ -307,7 +322,6 @@ def Calculate_AED(data_d,data_r,species,Path) :
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"AED.png"))
-    
     
 def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path): 
     Err_ORCH = np.abs(data_d[species]-data_r[species])/np.maximum(np.abs(data_d[species]),eps)
@@ -331,8 +345,6 @@ def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path):
     plt.savefig(os.path.join(Path,"ORCH.png"))
     
     return np.sum(value_fitness_species),value_fitness_species
-
-    
 
 def Calculate_PMO(data_d,data_r,integral,peak,case,lenght,Path) : 
     F1 = []
