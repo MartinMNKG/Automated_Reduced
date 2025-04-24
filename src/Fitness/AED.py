@@ -4,7 +4,8 @@ import pandas as pd
 import seaborn as sns
 import os
 
-def Calculate_AED(data_d,data_r,species,Path) : 
+def Calculate_AED(data_d,data_r,data,Path) :
+    species = list(data.keys()) 
     Err = pd.DataFrame()       
     for s in species : 
         Err[s] = np.abs(data_d[s]-data_r[s])
@@ -17,3 +18,6 @@ def Calculate_AED(data_d,data_r,species,Path) :
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"AED.png"))
+    Err_AED = np.sum(np.sum(Err))
+    print(f"Err AED = {Err_AED}")
+    return Err_AED

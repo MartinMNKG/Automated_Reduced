@@ -4,17 +4,20 @@ import pandas as pd
 import seaborn as sns
 import os
    
-def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path): 
+def Calculate_ORCH(data_d,data_r,data,Path): 
+    eps = 1e-12
+    species = list(data.keys())
+    
     Err_ORCH = np.abs(data_d[species]-data_r[species])/np.maximum(np.abs(data_d[species]),eps)
     mask = np.abs(data_d[species])<eps
     Err_ORCH[mask] = 0
     
     value_fitness_species =[]
     for s in species : 
-        if s in coefficient : 
-            k = coefficient[s]
-        else :
+        if data[s]["coefficient"] == None: 
             k = 0.05
+        else :
+            k = data[s]["coefficient"]
         
         value_fitness_species.append(k*np.sum(Err_ORCH[s]))
     
@@ -24,5 +27,6 @@ def Calculate_ORCH(data_d,data_r,species,coefficient,eps,Path):
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"ORCH.png"))
-    
-    return np.sum(value_fitness_species),value_fitness_species
+    Err = np.sum(value_fitness_species)
+    print(f"Err ORCH = {Err}")
+    return Err
