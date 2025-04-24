@@ -2,15 +2,11 @@ from tools import *
 main_path = os.getcwd()
 
 
-launch = True 
-
-Processing = True 
-Time_shift= False  
-log = False 
-scaler= False
-
-
-
+Name_Folder = "0D_ML"
+#################
+##   Cantera   ##
+#################
+launch = False 
 fuel1 = "NH3"
 fuel2 = "H2"
 oxidizer = "O2:0.21, N2:0.79, AR : 0.01"
@@ -24,14 +20,10 @@ gas_red = ct.Solution(Reduced_file)
 _gas_det_copy = ct.Solution(Detailed_file)
 _gas_red_copy = ct.Solution(Reduced_file)
 
-################
-## 0D reactor ##
-################
-Name_Folder = "0D"
 Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
-temperature_0D = np.linspace(1500,1500,1).tolist()
-phi_0D = np.round(np.linspace(1, 1, 1), 1).tolist()
+temperature_0D = np.linspace(1000,2000,5).tolist()
+phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
@@ -39,8 +31,14 @@ dt= 1e-6
 lenght = 1000
 case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
+####################
+##   Processing   ##
+####################
 
-
+Processing = True 
+Time_shift= False  
+log = True 
+scaler= True
 
 if launch == True : 
     #Launch 0D reactor Base
