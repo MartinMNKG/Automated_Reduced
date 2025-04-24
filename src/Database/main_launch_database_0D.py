@@ -9,8 +9,6 @@ Time_shift= False
 log = False 
 scaler= False
 
-AED = False 
-fitness = False 
 
 
 fuel1 = "NH3"
@@ -33,7 +31,7 @@ Name_Folder = "0D"
 Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1500,1500,1).tolist()
-phi_0D = np.round(np.linspace(1.0, 1.0, 1), 1).tolist()
+phi_0D = np.round(np.linspace(1, 1, 1), 1).tolist()
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
