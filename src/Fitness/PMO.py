@@ -39,9 +39,11 @@ def Calculate_PMO(data_d,data_r,data,Path) :
         bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["common_grid"])
         F3.append((top3 / bot3) ** 2 if bot3 != 0 else 0)
         
-        top4 = loc_data_r["IDT"][0] - loc_data_d["IDT"][0]
-        bot4 = loc_data_d["IDT"][0]
+        top4 = loc_data_r["IDT"].iloc[0] - loc_data_d["IDT"].iloc[0]
+        bot4 = loc_data_d["IDT"].iloc[0]
         F4.append((top4 / bot4) ** 2 if bot4 != 0 else 0) 
+        
+        
     Err_PMO = np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4))
 
     # Box plot
