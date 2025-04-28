@@ -23,8 +23,8 @@ def Calcualte_Brookesia(data_d,data_r,data,Path) :
         loc_data_d = data_d.iloc[c*lenght:c*lenght+lenght]
         loc_data_r = data_r.iloc[c*lenght:c*lenght+lenght]
          
-        Err_IDT.append(1 - (loc_data_d["IDT"].iloc[0]/loc_data_r["IDT"].iloc[0]))
-        Err.append(1 - (loc_data_d["IDT"].iloc[0]/loc_data_r["IDT"].iloc[0]))
+        Err_IDT.append(1 - (loc_data_r["IDT"].iloc[0]/loc_data_d["IDT"].iloc[0]))
+        Err.append(1 - (loc_data_r["IDT"].iloc[0]/loc_data_d["IDT"].iloc[0]))
         
         top_t = np.abs(np.trapezoid(loc_data_d["T"],loc_data_d["common_grid"]) - np.trapezoid(loc_data_r["T"],loc_data_r["common_grid"]))
         bot_t = np.trapezoid(loc_data_d["T"],loc_data_d["common_grid"])
@@ -40,10 +40,33 @@ def Calcualte_Brookesia(data_d,data_r,data,Path) :
                 Err_loc_s.append(top_s/bot_s)
                 Err.append(top_s/bot_s)
         Err_s.append(Err_loc_s)
+        
+    plt.figure()
+    plt.plot(range(case),Err_IDT)
+    plt.xlabel("cases")
+    plt.ylabel(r'$Err(IDT)$')
+    plt.grid()
+    plt.savefig(os.path.join(Path,"Brookesia_Err_IDT.png"))
     
-    plt.plot(Err_IDT,range(case))
-    plt.savefig("Err_IDT.png")
-            
+    plt.figure()
+    plt.plot(range(case),Err_T)
+    plt.xlabel("cases")
+    plt.ylabel(r'$Err(T)$')
+    plt.grid()
+    plt.savefig(os.path.join(Path,"Brookesia_Err_T.png"))
+    
+    
+    plt.figure()
+    Brookesia_species = [species for species, values in data.items() if values["Brookesia"] == 1]
+    plt.boxplot(np.array(Err_s), labels=Brookesia_species, showfliers=False)
+    plt.ylabel(r'$Err(Y_i)$')
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(Path,"Brookesia_Err_S.png"))
+    
+    
+    
     if Error_type =="mean": 
         return 1/np.mean(Err) 
     elif Error_type=="max" :   
