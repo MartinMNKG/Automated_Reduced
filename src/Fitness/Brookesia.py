@@ -61,6 +61,7 @@ def Calcualte_Brookesia(data_d,data_r,data,Path) :
     df = pd.DataFrame(Err_s,columns = Brookesia_species)
     sns.boxplot(df, showfliers=False)
     plt.ylabel(r'$Err(Y_i)$')
+    plt.yscale("log")
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"Brookesia_Err_S.png"))

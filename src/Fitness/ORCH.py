@@ -24,8 +24,10 @@ def Calculate_ORCH(data_d,data_r,data,Path):
     plt.figure()
     sns.boxplot(data=Err_ORCH,showfliers=False)
     plt.yscale("log")
+    plt.ylim([1e-4,5e1])
     plt.xticks(rotation=90)
     plt.tight_layout()
+    
     plt.savefig(os.path.join(Path,"ORCH.png"))
     Err = np.sum(value_fitness_species)
     print(f"Err ORCH = {Err}")

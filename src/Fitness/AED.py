@@ -15,6 +15,7 @@ def Calculate_AED(data_d,data_r,data,Path) :
     plt.figure()
     sns.boxplot(data=Err,showfliers=False)
     plt.yscale("log")
+    plt.ylim([1e-5,1e3])
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"AED.png"))
