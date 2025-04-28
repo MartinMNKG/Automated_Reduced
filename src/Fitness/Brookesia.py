@@ -58,14 +58,14 @@ def Calcualte_Brookesia(data_d,data_r,data,Path) :
     
     plt.figure()
     Brookesia_species = [species for species, values in data.items() if values["Brookesia"] == 1]
-    plt.boxplot(np.array(Err_s), labels=Brookesia_species, showfliers=False)
+    df = pd.DataFrame(Err_s,columns = Brookesia_species)
+    sns.boxplot(df, showfliers=False)
     plt.ylabel(r'$Err(Y_i)$')
-    plt.xticks(rotation=45)
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(os.path.join(Path,"Brookesia_Err_S.png"))
     
-    
+
     
     if Error_type =="mean": 
         return 1/np.mean(Err) 
