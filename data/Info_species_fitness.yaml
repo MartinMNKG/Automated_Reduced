@@ -2,75 +2,94 @@ Y_AR:
   coefficient:
   Integrate: 0
   Peak: 0
+  Brookesia: 0
 Y_N2:
   coefficient:
   Integrate: 1
   Peak: 0
+  Brookesia: 0
 Y_H2:
   coefficient: 3.0
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_H:
   coefficient: 3.0
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_O2:
   coefficient: 3.0
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_O:
   coefficient: 3.0
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_H2O:
   coefficient:
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_OH:
   coefficient: 3.0
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_HO2:
   coefficient:
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_NO:
   coefficient: 6.0
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_NH3:
   coefficient: 3.0
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_NH2:
   coefficient: 3.5
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_NH:
   coefficient: 3.5
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_N:
   coefficient:
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_NNH:
   coefficient: 5.0
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_N2H2:
   coefficient:
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_HNO:
   coefficient:
   Integrate: 0
   Peak: 1
+  Brookesia: 0
 Y_NO2:
   coefficient:
   Integrate: 1
   Peak: 0
+  Brookesia: 1
 Y_N2O:
   coefficient:
   Integrate: 1
   Peak: 0
+  Brookesia: 1
