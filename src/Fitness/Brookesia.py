@@ -7,7 +7,7 @@ import seaborn as sns
 import os
 
 
-def Calcualte_Brookesia(data_d,data_r,data,Path) : 
+def Calculate_Brookesia(data_d,data_r,data,Path,flag_output) : 
     Error_type = "max"
     
     
@@ -36,43 +36,20 @@ def Calcualte_Brookesia(data_d,data_r,data,Path) :
         for s in species : 
             if data[s]["Brookesia"] == 1 : 
                 top_s = np.abs(np.trapezoid(loc_data_d[s],loc_data_d["common_grid"]) - np.trapezoid(loc_data_r[s],loc_data_r["common_grid"]))
+                
                 bot_s = np.trapezoid(loc_data_d[s],loc_data_d["common_grid"])
                 Err_loc_s.append(top_s/bot_s)
                 Err.append(top_s/bot_s)
         Err_s.append(Err_loc_s)
         
-    plt.figure()
-    plt.plot(range(case),Err_IDT)
-    plt.xlabel("cases")
-    plt.ylabel(r'$Err(IDT)$')
-    plt.grid()
-    plt.savefig(os.path.join(Path,"Brookesia_Err_IDT.png"))
+    if flag_output == True : 
+        return Err_s, Err_T, Err_IDT 
+    else : 
+        if Error_type =="mean": 
+            return 1/np.mean(Err) 
+        elif Error_type=="max" :   
+            return 1/np.max(Err)
     
-    plt.figure()
-    plt.plot(range(case),Err_T)
-    plt.xlabel("cases")
-    plt.ylabel(r'$Err(T)$')
-    plt.grid()
-    plt.savefig(os.path.join(Path,"Brookesia_Err_T.png"))
-    
-    
-    plt.figure()
-    Brookesia_species = [species for species, values in data.items() if values["Brookesia"] == 1]
-    df = pd.DataFrame(Err_s,columns = Brookesia_species)
-    sns.boxplot(df, showfliers=False)
-    plt.ylabel(r'$Err(Y_i)$')
-    plt.yscale("log")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(Path,"Brookesia_Err_S.png"))
-    
-
-    
-    if Error_type =="mean": 
-        return 1/np.mean(Err) 
-    elif Error_type=="max" :   
-        return 1/np.max(Err)
-  
     
     
     
