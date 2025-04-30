@@ -26,15 +26,16 @@ def Calculate_PMO(data_d,data_r,data,Path) :
                 top1 = np.trapezoid((np.abs(loc_data_r[s]-loc_data_d[s])),loc_data_d["common_grid"])
                 bot1 = np.trapezoid(np.abs(np.array(loc_data_r[s])), np.array(loc_data_d["common_grid"]))
                 loc_F1.append((top1 / bot1) ** 2 if bot1 != 0 else 0)
-            F1.append(loc_F1)
+            
             
             
             if data[s]["Peak"] == 1 :  
                 top2 = np.max(loc_data_d[s])-np.max(loc_data_r[s])
                 bot2 = np.max(loc_data_d[s])
                 loc_F2.append((top2 / bot2) ** 2 if bot2 != 0 else 0)
-            F2.append(loc_F2)
-        
+            
+        F1.append(loc_F1)
+        F2.append(loc_F2)
         top3 = np.trapezoid(np.abs(loc_data_r["T"] - loc_data_d["T"]), loc_data_d["common_grid"])
         bot3 = np.trapezoid(np.abs(loc_data_d["T"]), loc_data_d["common_grid"])
         F3.append((top3 / bot3) ** 2 if bot3 != 0 else 0)
@@ -95,6 +96,6 @@ def Calculate_PMO(data_d,data_r,data,Path) :
     plt.savefig(os.path.join(Path, "F4.png"))
 
     
-    print(f"Err PMO = {Err_PMO}")
+    print(f"Err PMO = {Err_PMO:0.2e}")
     
     return Err_PMO
