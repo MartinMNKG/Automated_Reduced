@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 import os
    
-def Calculate_ORCH(data_d,data_r,data,Path): 
+def Calculate_ORCH(data_d,data_r,data,Path,flag_output): 
     eps = 1e-12
     species = list(data.keys())
     
@@ -21,14 +21,10 @@ def Calculate_ORCH(data_d,data_r,data,Path):
         
         value_fitness_species.append(k*np.sum(Err_ORCH[s]))
     
-    plt.figure()
-    sns.boxplot(data=Err_ORCH,showfliers=False)
-    plt.yscale("log")
-    plt.ylim([1e-4,5e1])
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    
-    plt.savefig(os.path.join(Path,"ORCH.png"))
     Err = np.sum(value_fitness_species)
-    print(f"Err ORCH = {Err}")
-    return Err
+    print(f"Err ORCH = {Err :0.2e}")
+    
+    if flag_output == True : 
+        return Err,Err_ORCH,value_fitness_species
+    else : 
+        return Err

@@ -6,7 +6,7 @@ import os
 
 
 
-def Calculate_PMO(data_d,data_r,data,Path) : 
+def Calculate_PMO(data_d,data_r,data,Path,flag_output) : 
     case = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
     lenght= int(data_d.shape[0]/ case)
     species = list(data.keys())
@@ -24,7 +24,9 @@ def Calculate_PMO(data_d,data_r,data,Path) :
             
             if data[s]["Integrate"] == 1 : 
                 top1 = np.trapezoid((np.abs(loc_data_r[s]-loc_data_d[s])),loc_data_d["common_grid"])
-                bot1 = np.trapezoid(np.abs(np.array(loc_data_r[s])), np.array(loc_data_d["common_grid"]))
+                
+                bot1 = np.trapezoid(np.abs(np.array(loc_data_d[s])), np.array(loc_data_d["common_grid"]))
+                
                 loc_F1.append((top1 / bot1) ** 2 if bot1 != 0 else 0)
             
             
@@ -47,55 +49,8 @@ def Calculate_PMO(data_d,data_r,data,Path) :
         
     Err_PMO = np.sqrt(np.sum(F1)+np.sum(F2)+np.sum(F3)+np.sum(F4))
 
-    # Box plot
-   
-    integrate_species = [species for species, values in data.items() if values["Integrate"] == 1]
-    peak_species = [species for species, values in data.items() if values["Peak"] == 1]
-
-    plt.rcParams.update({'font.size': 18})
-
-    # F1
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=np.array(F1), orient="v",showfliers=False)
-    plt.xticks(ticks=range(len(integrate_species)), labels=integrate_species, rotation=45)
-    plt.ylabel(r'$F_1(Y_i)$')
-    plt.yscale("log")
-    plt.ylim([1e-4,1e0])
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(Path, "F1.png"))
-
-    # F2
-    plt.figure(figsize=(12, 6))
-    peak_species = [species for species, values in data.items() if values["Peak"] == 1]
-    sns.boxplot(data=np.array(F2), orient="v",showfliers=False)
-    plt.xticks(ticks=range(len(peak_species)), labels=peak_species, rotation=45)
-    plt.ylabel(r'$F_2(Y_i)$')
-    plt.ylim([1e-4,1e1])
-    plt.yscale("log")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(Path, "F2.png"))
-
-    # F3
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=np.array(F3), orient="v",showfliers=False)
-    plt.xticks(ticks=[0], labels=["T"], rotation=45)
-    plt.ylabel(r'$F_3(T)$')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(Path, "F3.png"))
-
-    # F4
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=np.array(F4), orient="v",showfliers=False)
-    plt.xticks(ticks=[0], labels=["IDT"], rotation=45)
-    plt.ylabel(r'$F_4(T)$')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(Path, "F4.png"))
-
-    
     print(f"Err PMO = {Err_PMO:0.2e}")
-    
-    return Err_PMO
+    if flag_output == True :
+        return Err_PMO , F1, F2,F3,F4
+    else : 
+        return Err_PMO 
