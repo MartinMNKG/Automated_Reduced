@@ -12,6 +12,11 @@ def Calculate_ORCH(data_d,data_r,data,Path,flag_output):
     mask = np.abs(data_d[species])<eps
     Err_ORCH[mask] = 0
     
+    Err_ORCH["P_Init"]  = data_d["P_Init"]
+    Err_ORCH["T_Init"]  = data_d["T_Init"]
+    Err_ORCH["Phi_Init"]  =   data_d["Phi_Init"]
+    Err_ORCH["Mixt_Init"] = data_d["Mixt_Init"]
+    
     value_fitness_species =[]
     for s in species : 
         if data[s]["coefficient"] == None: 
