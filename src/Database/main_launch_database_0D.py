@@ -2,19 +2,20 @@ from tools import *
 main_path = os.getcwd()
 
 
-Name_Folder = "0D_ML"
+Name_Folder = "0D"
 #################
 ##   Cantera   ##
 #################
 launch = False 
+
 fuel1 = "NH3"
 fuel2 = "H2"
 oxidizer = "O2:0.21, N2:0.79, AR : 0.01"
 
 Detailed_file = "./data/detailed.yaml"
 name_d = "Detailed"
-Reduced_file = "./data/reduced.yaml"
-name_r = "Reduced"
+Reduced_file = "./data/STEC_B.yaml"
+name_r = "OptimB"
 gas_det = ct.Solution(Detailed_file)
 gas_red = ct.Solution(Reduced_file)
 _gas_det_copy = ct.Solution(Detailed_file)
@@ -37,8 +38,8 @@ case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0
 
 Processing = True 
 Time_shift= False  
-log = True 
-scaler= True
+log = False 
+scaler= False
 
 if launch == True : 
     #Launch 0D reactor Base
@@ -49,4 +50,7 @@ if Processing == True :
     #Processing Database
     csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
     csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
-    data_d , data_r = Processing_0D(csv_d,csv_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 
+    all_csv_det_sorted = sorted(csv_d, key=extract_values)
+    all_csv_red_sorted = sorted(csv_r, key=extract_values)
+    
+    data_d , data_r = Processing_0D(all_csv_det_sorted,all_csv_red_sorted,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 

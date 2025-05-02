@@ -2,6 +2,7 @@ import numpy as np
 import cantera as ct
 import pandas as pd 
 import os
+import re
 import sys
 import time
 import itertools
@@ -109,7 +110,6 @@ def Processing_0D(list_csv_d,list_csv_r,cases,time_shift,log,scaler,lenght,name_
     list_csv = zip(list_csv_d,list_csv_r)
     
     for csv_d,csv_r in list_csv : 
-        
         pressure, temperature, equivalence_ratio,mixture = cases[list_csv_d.index(csv_d)]
         New_data_d = pd.DataFrame()
         data_d=pd.read_csv(csv_d)
@@ -310,4 +310,17 @@ def find_convergence_index(series: pd.Series, window: int = 5, tolerance: float 
             return i + window  # Return the index where convergence ends
     return len(series)  # No convergence detected
 
- 
+def extract_values(path):
+    # Regex améliorée : on impose que P soit suivi de chiffres/point AVANT ".csv"
+    match = re.search(r'ER([0-9.]+)_T([0-9.]+)_P([0-9.]+)\.csv$', path)
+    if match:
+        try:
+            er = float(match.group(1))
+            temp = float(match.group(2))
+            press = float(match.group(3))
+            return (er, temp, press)
+        except ValueError:
+            pass  # en cas de float invalide
+    # Cas d'erreur ou fichier mal nommé
+    print(f"⚠️ Mauvais format de fichier : {path}")
+    return (float('inf'), float('inf'), float('inf'))
