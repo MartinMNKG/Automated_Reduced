@@ -34,6 +34,12 @@ Brookesia = [
     "Y_H2", "Y_NH3", "Y_O2", "Y_OH", "Y_NO", 'Y_H2O', 'Y_NO2', 'Y_N2O'
 ]
 
+
+AED = [
+    "Y_H2", "Y_NH3", "Y_O2", "Y_OH", "Y_NO", 'Y_H2O', 'Y_NO2', 'Y_N2O'
+]
+
+
 # Construction du dictionnaire
 donnees_especes = {}
 
@@ -42,7 +48,8 @@ for espece in especes:
         "coefficient": coefficient.get(espece, None),
         "Integrate": 1 if espece in integrate_species else 0,
         "Peak": 1 if espece in peak_species else 0,
-        "Brookesia" : 1 if espece in Brookesia else 0 
+        "Brookesia" : 1 if espece in Brookesia else 0, 
+        "AED" : 1 if espece in AED else 0 
     }
 
 # Écriture dans le fichier YAML
