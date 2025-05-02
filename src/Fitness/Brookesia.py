@@ -41,13 +41,19 @@ def Calculate_Brookesia(data_d,data_r,input,Path,flag_output) :
                 Err_loc_s.append(top_s/bot_s)
                 Err.append(top_s/bot_s)
         Err_s.append(Err_loc_s)
-        
+     
+    print(f"Err BROOKESIA mean ={1/np.mean(Err):0.2E}")
+    print(f"Err BROOKESIA max ={1/np.max(Err):0.2E}") 
+       
     if flag_output == True : 
         return Err_s, Err_T, Err_IDT 
+    
     else : 
         if Error_type =="mean": 
+            
             return 1/np.mean(Err) 
-        elif Error_type=="max" :   
+        elif Error_type=="max" : 
+             
             return 1/np.max(Err)
     
     

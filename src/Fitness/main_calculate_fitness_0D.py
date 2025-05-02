@@ -10,7 +10,7 @@ import pandas as pd
 yaml = YAML()
 main_path = os.getcwd()
 flag_output = False
-Name_Folder = "0D_1case"
+Name_Folder = "0D"
 Name_File = "Reduced"
 Path = os.path.join(main_path,f"{Name_Folder}")
 
@@ -20,8 +20,8 @@ with open("./data/Info_species_fitness.yaml", "r") as f:
 data_d = pd.read_csv(f"/work/kotlarcm/WORK/Automated_Reduced/{Name_Folder}/Processing_Detailed.csv")
 data_r = pd.read_csv(f"/work/kotlarcm/WORK/Automated_Reduced/{Name_Folder}/Processing_{Name_File}.csv")
 
-# fitness = [Calculate_AED, Calculate_ORCH , Calculate_PMO, Calculate_Brookesia]
-fitness = [Calculate_AED_ML] 
+fitness = [Calculate_AED, Calculate_ORCH , Calculate_PMO, Calculate_Brookesia,Calculate_AED_ML]
+# fitness = [Calculate_AED_ML] 
 
 for F in fitness : 
     Err = F(data_d,data_r,Input,Path,flag_output)
