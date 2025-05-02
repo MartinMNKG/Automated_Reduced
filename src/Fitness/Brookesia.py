@@ -7,13 +7,13 @@ import seaborn as sns
 import os
 
 
-def Calculate_Brookesia(data_d,data_r,data,Path,flag_output) : 
+def Calculate_Brookesia(data_d,data_r,input,Path,flag_output) : 
     Error_type = "max"
     
     
     case = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
     lenght= int(data_d.shape[0]/ case)
-    species = list(data.keys())
+    species = list(input.keys())
     
     Err_IDT =[] 
     Err_T = []
@@ -34,7 +34,7 @@ def Calculate_Brookesia(data_d,data_r,data,Path,flag_output) :
         
         Err_loc_s =[]
         for s in species : 
-            if data[s]["Brookesia"] == 1 : 
+            if input[s]["Brookesia"] == 1 : 
                 top_s = np.abs(np.trapezoid(loc_data_d[s],loc_data_d["common_grid"]) - np.trapezoid(loc_data_r[s],loc_data_r["common_grid"]))
                 
                 bot_s = np.trapezoid(loc_data_d[s],loc_data_d["common_grid"])
