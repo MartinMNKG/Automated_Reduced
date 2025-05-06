@@ -8,19 +8,19 @@ import os
 def Calculate_AED_ML(data_d,data_r,input,Path,flag_output) :
     species = [species for species, values in input.items() if values["AED"] == 1]
     
-    data_d[species+["T"]]=data_d[species+["T"]].apply(np.log)  
-    data_r[species+["T"]]=data_r[species+["T"]].apply(np.log) 
+    data_d_log=data_d[species+["T","IDT"]].apply(np.log)  
+    data_r_log=data_r[species+["T","IDT"]].apply(np.log) 
     
     scl = StandardScaler()
-    scl.fit(data_d[species+["T"]])
-    data_d[species+["T"]] = scl.transform(data_d[species+["T"]])
-    data_r[species+["T"]] = scl.transform(data_r[species+["T"]])
+    scl.fit(data_d_log)
+    data_d_log_scl = pd.DataFrame(scl.transform(data_d_log),columns= data_d_log.columns)
+    data_r_log_scl = pd.DataFrame(scl.transform(data_r_log),columns= data_r_log.columns)
         
     Err = pd.DataFrame()       
     for s in species : 
-        Err[s] = np.abs(data_d[s]-data_r[s])
-    Err["T"] = np.abs(data_d["T"]-data_r["T"])
-    Err["IDT"] = np.abs(data_d["IDT"]-data_r["IDT"])
+        Err[s] = np.abs(data_d_log_scl[s]-data_r_log_scl[s])
+    Err["T"] = np.abs(data_d_log_scl["T"]-data_r_log_scl["T"])
+    Err["IDT"] = np.abs(data_d_log_scl["IDT"]-data_r_log_scl["IDT"])
     Err_AED = np.sum(np.sum(Err,axis=0))
     print(f"Err AED ML = {Err_AED:0.2E}")
     
