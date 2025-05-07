@@ -8,8 +8,15 @@ import os
 def Calculate_AED_ML(data_d,data_r,input,Path,flag_output) :
     species = [species for species, values in input.items() if values["AED"] == 1]
     
-    data_d_log=data_d[species+["T","IDT"]].apply(np.log)  
-    data_r_log=data_r[species+["T","IDT"]].apply(np.log) 
+    data_d_log=data_d[species].apply(np.log)  
+    data_r_log=data_r[species].apply(np.log) 
+    
+    data_d_log["T"] = data_d["T"]
+    data_d_log["IDT"] = data_d["IDT"]
+    
+    data_r_log["T"] = data_r["T"]
+    data_r_log["IDT"] = data_r["IDT"]
+    
     
     scl = StandardScaler()
     scl.fit(data_d_log)
