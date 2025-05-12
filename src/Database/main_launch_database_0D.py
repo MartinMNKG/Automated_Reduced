@@ -2,11 +2,11 @@ from tools import *
 main_path = os.getcwd()
 
 
-Name_Folder = "0D"
+Name_Folder = "0D_Test"
 #################
 ##   Cantera   ##
 #################
-launch = False 
+launch = True 
 
 fuel1 = "NH3"
 fuel2 = "H2"
@@ -43,14 +43,18 @@ scaler= False
 
 if launch == True : 
     #Launch 0D reactor Base
-    Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_d,Path)
-    Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_r,Path)
+    data_d = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_d,Path)
+    data_r = Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_r,Path)
 
 if Processing == True : 
     #Processing Database
-    csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
-    csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
-    all_csv_det_sorted = sorted(csv_d, key=extract_values)
-    all_csv_red_sorted = sorted(csv_r, key=extract_values)
-    
-    data_d , data_r = Processing_0D(all_csv_det_sorted,all_csv_red_sorted,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path) 
+    if launch == False : 
+        csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
+        csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
+        data_d_csv = sorted(csv_d, key=extract_values)
+        data_r_csv = sorted(csv_r, key=extract_values)
+        print("New_Processing_csv")
+        data_d_processing , data_r_processing = Processing_new_0D(data_d_csv,data_r_csv,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path)
+
+    print("New_processing_Df")
+    data_d_processing, data_r_processing = Processing_new_0D(data_d,data_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path)
