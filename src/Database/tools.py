@@ -240,7 +240,6 @@ def Launch_processing_1D_PMX_csv(
     Ref_csv : list, 
     Data_csv : list, 
     cases : list, 
-    length : int , 
     name_ref : str, 
     name_data : str, 
     Path : str, 
@@ -249,7 +248,7 @@ def Launch_processing_1D_PMX_csv(
     Data_Ref = concat_csv_list(Ref_csv)
     Data = concat_csv_list(Data_csv)
     
-    Data_Ref = Processing_1D_PMX_ref(Data_Ref,cases,length,name_ref,Path,save_csv)
+    Data_Ref = Processing_1D_PMX_ref(Data_Ref,cases,name_ref,Path,save_csv)
     Data = Processing_1D_PMX_data(Data,Data_Ref,cases,name_data,Path,save_csv)
     
     return Data_Ref,Data
@@ -257,7 +256,6 @@ def Launch_processing_1D_PMX_csv(
 def Processing_1D_PMX_ref(
     input_data: pd.DataFrame,
     cases: list,
-    length: int,
     name_ref: str,
     Path: str,
     save_csv: bool
@@ -279,7 +277,7 @@ def Processing_1D_PMX_ref(
         int_func = interp1d(data_loc["grid"],data_loc["T"],fill_value='extrapolate')
         New_data_ref["T"] = int_func(New_data_ref["common_grid"])
         
-        New_data_ref["velocity"] = data_loc["velocity"][0]
+        New_data_ref["velocity"] = data_loc["velocity"].iloc[0]
         New_data_ref["P_Init"]  = pressure
         New_data_ref["T_Init"]  = temperature
         New_data_ref["Phi_Init"]  =   equivalence_ratio  
@@ -320,7 +318,7 @@ def Processing_1D_PMX_data(
         int_func = interp1d(data_loc["grid"], data_loc["T"], fill_value="extrapolate")
         New_data["T"] = int_func(loc_common_grid)
         
-        New_data["velocity"] = data_loc["velocity"][0]
+        New_data["velocity"] = data_loc["velocity"].iloc[0]
         New_data["P_Init"] = pressure
         New_data["T_Init"] = temperature
         New_data["Phi_Init"] = equivalence_ratio
@@ -434,7 +432,7 @@ def Calc_ai_delay(time,temp) :
 def shift_1D(grid: list, T: list) -> list:
     gradient = np.gradient(T, grid)
     indice_gradient = np.argmax(gradient)
-    shift_grid = grid - grid.loc[indice_gradient]
+    shift_grid = grid - grid.iloc[indice_gradient]
 
     return shift_grid
 
@@ -470,7 +468,6 @@ def extract_values(path):
     # Cas d'erreur ou fichier mal nommé
     print(f"⚠️ Mauvais format de fichier : {path}")
     return (float('inf'), float('inf'), float('inf'))
-
 
 def concat_csv_list(csv_paths: list[str]) -> pd.DataFrame:
     """
