@@ -44,8 +44,9 @@ def Create_directory(main_path,name) :
         pass
     return dossier
 
-def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier) : 
-    dossier = Create_directory(dossier,type)
+def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier,save) : 
+    if save == True :
+        dossier = Create_directory(dossier,type)
     all_df = pd.DataFrame()
     for case in case_0D :
         pressure, temperature, equivalence_ratio,mixture = case
@@ -72,20 +73,25 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier) :
             time +=dt
             sim.advance(time)
             states.append(r.thermo.state, t=time)
+        
+         
+        
             
-        states.save(
-            f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True
-        ) 
+            
         df_states = states.to_pandas()
         df_states["P_Init"] = pressure
         df_states["T_Init"] = temperature
         df_states["Phi_Init"] = equivalence_ratio
         df_states["Mixt_Init"] = mixture
+        if save == True:   
+            df_states.to_csv(f"{dossier}/0Dreactor_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv")
+        
         all_df = pd.concat([all_df,df_states],ignore_index=True)
     return all_df
 
-def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) : 
+def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) : 
     dossier = Create_directory(dossier,type)
+    all_df = pd.DataFrame()
     for case in case_1D : 
         pressure, temperature, equivalence_ratio,mixture = case
         fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
@@ -106,109 +112,227 @@ def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier) :
         
         # Résoudre la flamme
         f.solve(loglevel=0, auto=True)
-        
-        f.save(f"{dossier}/1D_PMX_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv",overwrite=True)
+    
+    
+        species_names = [f"Y_{name}" for name in f.gas.species_names]
+        df = pd.DataFrame(f.Y.T, columns=species_names)
+        df["grid"] = f.grid
+        df["T"] = f.T
+        df["velocity"] = f.velocity  # velocity
+        df["rho"] = f.density
 
-def Processing_new_0D(
-    list_csv_d, list_csv_r,
-    cases, time_shift, log, scaler,
-    lenght, name_d, name_r, Path
+        # Add metadata
+        df["P_Init"] = pressure
+        df["T_Init"] = temperature
+        df["Phi_Init"] = equivalence_ratio
+        df["Mixt_Init"] = mixture
+        if save : 
+            df.to_csv(f"{dossier}/1D_PMX_ER{equivalence_ratio}_T{temperature}_P{pressure/101325}.csv", index=False)
+
+        all_df = pd.concat([all_df,df],ignore_index=True)
+    return all_df
+
+def Launch_processing_0D_csv(
+    Ref_csv : list,
+    Data_csv: list, 
+    cases : list, 
+    length: int, 
+    name_ref : str, 
+    name_data :str,
+    Path : str,
+    save_csv : bool 
+) : 
+    Data_Ref = concat_csv_list(Ref_csv)
+    Data = concat_csv_list(Data_csv)
+    
+    Data_Ref = Processing_0D_ref(Data_Ref,cases,length,name_ref,Path,save_csv)
+    Data = Processing_0D_data(Data,Data_Ref,cases,name_data,Path,save_csv)
+    
+    return Data_Ref,Data
+
+def Processing_0D_ref(
+    input_data: pd.DataFrame,
+    cases: list,
+    length: int,
+    name_ref: str,
+    Path: str,
+    save_csv: bool
 ):
-
-    # Détection automatique : CSV ou DataFrames ?
-    if isinstance(list_csv_d, pd.DataFrame) and isinstance(list_csv_r, pd.DataFrame):
-        use_full_df = True
-        data_d_full = list_csv_d
-        data_r_full = list_csv_r
-        _= "df"
-    else:
-        use_full_df = False
-        _="csv"
-
-    all_data_d = pd.DataFrame()
-    all_data_r = pd.DataFrame()
-
-    n_cases = len(cases)
-    print(n_cases)
-    for i in range(n_cases):
-        pressure, temperature, equivalence_ratio, mixture = cases[i]
-        New_data_d = pd.DataFrame()
-
-        if use_full_df:
-            data_d = data_d_full[(data_d_full["P_Init"] == pressure)&(data_d_full["T_Init"] ==temperature)&(data_d_full["Phi_Init"] == equivalence_ratio)&(data_d_full["Mixt_Init"] == mixture)].copy()
-            data_r = data_r_full[(data_r_full["P_Init"] == pressure)&(data_r_full["T_Init"] ==temperature)&(data_r_full["Phi_Init"] == equivalence_ratio)&(data_r_full["Mixt_Init"] == mixture)].copy()
-            
-            
-        else:
-            data_d = pd.read_csv(list_csv_d[i])
-            data_r = pd.read_csv(list_csv_r[i])
-
-        species = [col for col in data_r.columns if col.startswith("Y_")]
-        IDT_d = Calc_ai_delay(data_d["t"], data_d["T"])
-
-        if time_shift:
-            data_d["t"] = data_d["t"] - IDT_d
-        if log:
-            data_d[species] = data_d[species].apply(np.log)
-
-        ind = find_convergence_index(data_d["T"])
-        New_data_d["common_grid"] = Generate_common_grid(
-            data_d["t"].iloc[:ind], data_d["T"].iloc[:ind], lenght
+    data_processing = pd.DataFrame()
+    species = [col for col in input_data.columns if col.startswith("Y_")]
+    
+    for c in cases : 
+        New_data_ref = pd.DataFrame()
+        
+        pressure, temperature, equivalence_ratio, mixture = c 
+        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["Phi_Init"] == equivalence_ratio)&(input_data["Mixt_Init"] == mixture)].copy()
+        IDT_d = Calc_ai_delay(data_loc["t"], data_loc["T"])
+        
+        
+        ind = find_convergence_index(data_loc["T"])
+        New_data_ref["common_grid"] = Generate_common_grid(
+            data_loc["t"].iloc[:ind], data_loc["T"].iloc[:ind], length
         )
 
         for s in species:
-            int_func = interp1d(data_d["t"], data_d[s], fill_value="extrapolate")
-            New_data_d[s] = int_func(New_data_d["common_grid"])
+            int_func = interp1d(data_loc["t"], data_loc[s], fill_value="extrapolate")
+            New_data_ref[s] = int_func(New_data_ref["common_grid"])
 
-        int_func = interp1d(data_d["t"], data_d["T"], fill_value="extrapolate")
-        New_data_d["T"] = int_func(New_data_d["common_grid"])
+        int_func = interp1d(data_loc["t"], data_loc["T"], fill_value="extrapolate")
+        New_data_ref["T"] = int_func(New_data_ref["common_grid"])
 
-        if scaler:
-            scl = StandardScaler()
-            scl.fit(New_data_d[species])
-            New_data_d[species] = scl.transform(New_data_d[species])
+        New_data_ref["IDT"] = IDT_d
+        New_data_ref["P_Init"] = pressure
+        New_data_ref["T_Init"] = temperature
+        New_data_ref["Phi_Init"] = equivalence_ratio
+        New_data_ref["Mixt_Init"] = mixture
+        data_processing = pd.concat([data_processing, New_data_ref], ignore_index=True)
+        
+    if save_csv : 
+        data_processing.to_csv(os.path.join(Path, f"Processing_{name_ref}.csv"))
+        
+    return data_processing
 
-        New_data_d["IDT"] = IDT_d
-        New_data_d["P_Init"] = pressure
-        New_data_d["T_Init"] = temperature
-        New_data_d["Phi_Init"] = equivalence_ratio
-        New_data_d["Mixt_Init"] = mixture
-        all_data_d = pd.concat([all_data_d, New_data_d], ignore_index=True)
+def Processing_0D_data(
+    input_data: pd.DataFrame,
+    input_data_ref : pd.DataFrame,
+    cases: list,
+    name_data: str,
+    Path: str,
+    save_csv: bool
+):
+    data_processing = pd.DataFrame()
+    species = [col for col in input_data.columns if col.startswith("Y_")]
+    
+    for c in cases : 
+        pressure, temperature, equivalence_ratio, mixture = c
+        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["Phi_Init"] == equivalence_ratio)&(input_data["Mixt_Init"] == mixture)].copy()
+        
+        # get common grid 
+        loc_common_grid = input_data_ref[(input_data_ref["P_Init"] == pressure)&(input_data_ref["T_Init"] ==temperature)&(input_data_ref["Phi_Init"] == equivalence_ratio)&(input_data_ref["Mixt_Init"] == mixture)]["common_grid"]
+        
+        New_data = pd.DataFrame()
+        
+        IDT_r = Calc_ai_delay(data_loc["t"], data_loc["T"])
 
-        # ---- DATA R ---- #
-        New_data_r = pd.DataFrame()
-        IDT_r = Calc_ai_delay(data_r["t"], data_r["T"])
-
-        if time_shift:
-            data_r["t"] = data_r["t"] - IDT_r
-        if log:
-            data_r[species] = data_r[species].apply(np.log)
-
-        New_data_r["common_grid"] = New_data_d["common_grid"]
+        New_data["common_grid"] = loc_common_grid
 
         for s in species:
-            int_func = interp1d(data_r["t"], data_r[s], fill_value="extrapolate")
-            New_data_r[s] = int_func(New_data_d["common_grid"])
+            int_func = interp1d(data_loc["t"], data_loc[s], fill_value="extrapolate")
+            New_data[s] = int_func(loc_common_grid)
 
-        int_func = interp1d(data_r["t"], data_r["T"], fill_value="extrapolate")
-        New_data_r["T"] = int_func(New_data_d["common_grid"])
+        int_func = interp1d(data_loc["t"], data_loc["T"], fill_value="extrapolate")
+        New_data["T"] = int_func(loc_common_grid)
 
-        if scaler:
-            New_data_r[species] = scl.transform(New_data_r[species])
+        New_data["IDT"] = IDT_r
+        New_data["P_Init"] = pressure
+        New_data["T_Init"] = temperature
+        New_data["Phi_Init"] = equivalence_ratio
+        New_data["Mixt_Init"] = mixture
+        data_processing = pd.concat([data_processing, New_data], ignore_index=True)
+        
+    if save_csv : 
+        data_processing.to_csv(os.path.join(Path, f"Processing_{name_data}.csv"))
+    
+    return data_processing
 
-        New_data_r["IDT"] = IDT_r
-        New_data_r["P_Init"] = pressure
-        New_data_r["T_Init"] = temperature
-        New_data_r["Phi_Init"] = equivalence_ratio
-        New_data_r["Mixt_Init"] = mixture
-        all_data_r = pd.concat([all_data_r, New_data_r], ignore_index=True)
+def Launch_processing_1D_PMX_csv(
+    Ref_csv : list, 
+    Data_csv : list, 
+    cases : list, 
+    length : int , 
+    name_ref : str, 
+    name_data : str, 
+    Path : str, 
+    save_csv : bool
+) : 
+    Data_Ref = concat_csv_list(Ref_csv)
+    Data = concat_csv_list(Data_csv)
+    
+    Data_Ref = Processing_1D_PMX_ref(Data_Ref,cases,length,name_ref,Path,save_csv)
+    Data = Processing_1D_PMX_data(Data,Data_Ref,cases,name_data,Path,save_csv)
+    
+    return Data_Ref,Data
 
-    all_data_d.to_csv(os.path.join(Path, f"Processing_new_{_}_{name_d}.csv"))
-    all_data_r.to_csv(os.path.join(Path, f"Processing_new_{_}_{name_r}.csv"))
+def Processing_1D_PMX_ref(
+    input_data: pd.DataFrame,
+    cases: list,
+    length: int,
+    name_ref: str,
+    Path: str,
+    save_csv: bool
+) : 
+    data_processing = pd.DataFrame()
+    species = [col for col in input_data.columns if col.startswith("Y_")]
+    
+    for c in cases : 
+        New_data_ref = pd.DataFrame()
+        pressure, temperature, equivalence_ratio, mixture = c 
+        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["Phi_Init"] == equivalence_ratio)&(input_data["Mixt_Init"] == mixture)].copy()
+        data_loc["grid"] = shift_1D(data_loc["grid"],data_loc["T"])
+        New_data_ref["common_grid"] = data_loc["grid"]
+        
+        for s in species : 
+            int_func = interp1d(data_loc["grid"],data_loc[s],fill_value='extrapolate')
+            New_data_ref[s] = int_func(New_data_ref["common_grid"])
+        
+        int_func = interp1d(data_loc["grid"],data_loc["T"],fill_value='extrapolate')
+        New_data_ref["T"] = int_func(New_data_ref["common_grid"])
+        
+        New_data_ref["velocity"] = data_loc["velocity"][0]
+        New_data_ref["P_Init"]  = pressure
+        New_data_ref["T_Init"]  = temperature
+        New_data_ref["Phi_Init"]  =   equivalence_ratio  
+        New_data_ref["Mixt_Init"] = mixture     
+        
+        data_processing = pd.concat([data_processing,New_data_ref],ignore_index=True) 
+        
+    if save_csv : 
+        data_processing.to_csv(os.path.join(Path, f"Processing_{name_ref}.csv"))
+        
+    return data_processing 
 
-    return all_data_d, all_data_r
+def Processing_1D_PMX_data(
+    input_data: pd.DataFrame,
+    input_data_ref : pd.DataFrame,
+    cases: list,
+    name_data: str,
+    Path: str,
+    save_csv: bool
+) : 
+    data_processing = pd.DataFrame()
+    species = [col for col in input_data.columns if col.startswith("Y_")]
+    
+    for c in cases : 
+        pressure, temperature, equivalence_ratio, mixture = c
+        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["Phi_Init"] == equivalence_ratio)&(input_data["Mixt_Init"] == mixture)].copy()
+        loc_common_grid = input_data_ref[(input_data_ref["P_Init"] == pressure)&(input_data_ref["T_Init"] ==temperature)&(input_data_ref["Phi_Init"] == equivalence_ratio)&(input_data_ref["Mixt_Init"] == mixture)]["common_grid"]
+        
+        New_data = pd.DataFrame()
 
- 
+        data_loc["grid"] = shift_1D(data_loc["grid"],data_loc["T"])
+        New_data["common_grid"] = loc_common_grid
+        
+        for s in species:
+            int_func = interp1d(data_loc["grid"], data_loc[s], fill_value="extrapolate")
+            New_data[s] = int_func(loc_common_grid)
+            
+        int_func = interp1d(data_loc["grid"], data_loc["T"], fill_value="extrapolate")
+        New_data["T"] = int_func(loc_common_grid)
+        
+        New_data["velocity"] = data_loc["velocity"][0]
+        New_data["P_Init"] = pressure
+        New_data["T_Init"] = temperature
+        New_data["Phi_Init"] = equivalence_ratio
+        New_data["Mixt_Init"] = mixture
+            
+        data_processing = pd.concat([data_processing,New_data],ignore_index=True) 
+        
+    if save_csv : 
+        data_processing.to_csv(os.path.join(Path, f"Processing_{name_data}.csv"))
+        
+    return data_processing 
+
 def Processing_1D(list_csv_d,list_csv_r,cases,grid_shift,log,scaler,lenght,name_d,name_r,Path)  : 
     
     all_data_d = pd.DataFrame()
@@ -346,3 +470,24 @@ def extract_values(path):
     # Cas d'erreur ou fichier mal nommé
     print(f"⚠️ Mauvais format de fichier : {path}")
     return (float('inf'), float('inf'), float('inf'))
+
+
+def concat_csv_list(csv_paths: list[str]) -> pd.DataFrame:
+    """
+    Concatène une liste de fichiers CSV en un seul DataFrame pandas.
+
+    Args:
+        csv_paths (list[str]): Liste des chemins vers les fichiers CSV.
+
+    Returns:
+        pd.DataFrame: DataFrame concaténé contenant les données de tous les fichiers.
+    """
+    all_data = []
+    for path in csv_paths:
+        try:
+            df = pd.read_csv(path)
+            all_data.append(df)
+        except Exception as e:
+            print(f"Erreur lors de la lecture du fichier {path}: {e}")
+
+    return pd.concat(all_data, ignore_index=True)

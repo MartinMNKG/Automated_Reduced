@@ -1,21 +1,24 @@
 from tools import *
+
+start_simu = time.time()
 main_path = os.getcwd()
 
-
 Name_Folder = "0D_Test"
+launch = True  # Launch Simulation
+save = False # Save into CSV 
 #################
 ##   Cantera   ##
 #################
-launch = True 
 
 fuel1 = "NH3"
 fuel2 = "H2"
 oxidizer = "O2:0.21, N2:0.79, AR : 0.01"
 
 Detailed_file = "./data/detailed.yaml"
-name_d = "Detailed"
+Name_Ref = "Detailed"
 Reduced_file = "./data/STEC_B.yaml"
-name_r = "OptimB"
+Name_Data = "OptimB"
+
 gas_det = ct.Solution(Detailed_file)
 gas_red = ct.Solution(Reduced_file)
 _gas_det_copy = ct.Solution(Detailed_file)
@@ -29,32 +32,25 @@ mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
 dt= 1e-6
-lenght = 1000
+length = 1000
 case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
-    
-####################
-##   Processing   ##
-####################
-
-Processing = True 
-Time_shift= False  
-log = False 
-scaler= False
 
 if launch == True : 
     #Launch 0D reactor Base
-    data_d = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_d,Path)
-    data_r = Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,name_r,Path)
+    
+    data_ref = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Ref,Path,save)
+    data = Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Data,Path,save)
+    
+    #Process Data Ref and Data 
+    Processing_Ref  = Processing_0D_ref(data_ref,case_0D,length,Name_Ref,Path,save)
+    Processing_Data = Processing_0D_data(data,Processing_Ref,case_0D,Name_Data,Path,save)
+    
+    Processing_Ref.to_csv(os.path.join(Path, f"Processing_NoWriting_{Name_Ref}.csv"))
+    Processing_Data.to_csv(os.path.join(Path, f"Processing_NoWriting_{Name_Data}.csv"))
+    
 
-if Processing == True : 
-    #Processing Database
-    if launch == False : 
-        csv_d = glob.glob(os.path.join(Path,f"{name_d}/*.csv"))
-        csv_r = glob.glob(os.path.join(Path,f"{name_r}/*.csv"))
-        data_d_csv = sorted(csv_d, key=extract_values)
-        data_r_csv = sorted(csv_r, key=extract_values)
-        print("New_Processing_csv")
-        data_d_processing , data_r_processing = Processing_new_0D(data_d_csv,data_r_csv,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path)
+else : 
 
-    print("New_processing_Df")
-    data_d_processing, data_r_processing = Processing_new_0D(data_d,data_r,case_0D,Time_shift,log,scaler,lenght,name_d,name_r,Path)
+    List_Ref = glob.glob(os.path.join(Path,f"{Name_Ref}/*.csv"))
+    List_Data = glob.glob(os.path.join(Path,f"{Name_Data}/*.csv"))
+    Processing_Ref2,Processing_Data2 = Launch_processing_0D_csv(List_Ref,List_Data,case_0D,length,Name_Ref,Name_Data,Path,save)
