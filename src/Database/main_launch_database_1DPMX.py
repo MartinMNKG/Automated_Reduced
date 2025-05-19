@@ -26,7 +26,7 @@ gas_red = ct.Solution(Reduced_file)
 ################
 ##   1D PMX   ##
 ################
-Name_Folder = "1D"
+Name_Folder = "1D_PMX"
 Path = Create_directory(main_path,Name_Folder)
 
 pressure_1D = np.linspace(1,1,1).tolist()
@@ -42,11 +42,15 @@ if launch == True :
     
     
     data_ref = Sim1D(gas_det,fuel1,fuel2,oxidizer,case_1D,Name_Ref,Path,save)
+    
     print(f"Time Simu Ref : { time.time()- start_time}")
     simu_data = time.time()
+    
     data = Sim1D(gas_red,fuel1,fuel2,oxidizer,case_1D,Name_Data,Path,save)
+    
     print(f'Time Simu Data = { time.time() - simu_data }')
     process = time.time()
+    
     Processing_Ref  = Processing_1D_PMX_ref(data_ref,case_1D,Name_Ref,Path,save)
     Processing_Data = Processing_1D_PMX_data(data,Processing_Ref,case_1D,Name_Data,Path,save)
     

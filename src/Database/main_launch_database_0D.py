@@ -32,17 +32,18 @@ mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
 dt= 1e-6
+
 length = 1000
 case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
 
 if launch == True : 
     #Launch 0D reactor Base
     
-    data_ref = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Ref,Path,save)
+    data_ref = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Ref,Path,save) # Return all sim into 1 datafram
     data = Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Data,Path,save)
     
     #Process Data Ref and Data 
-    Processing_Ref  = Processing_0D_ref(data_ref,case_0D,length,Name_Ref,Path,save)
+    Processing_Ref  = Processing_0D_ref(data_ref,case_0D,length,Name_Ref,Path,save) # Return all sim process into 1 datafram 
     Processing_Data = Processing_0D_data(data,Processing_Ref,case_0D,Name_Data,Path,save)
     
     Processing_Ref.to_csv(os.path.join(Path, f"Processing_NoWriting_{Name_Ref}.csv"))

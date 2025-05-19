@@ -186,6 +186,118 @@ def Sim1D_CF(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
 
     return all_df
 
+def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
+    tol_ss = [1.0e-6, 1.0e-9]
+    tol_ts = [1.0e-6, 1.0e-9]
+    width = 0.02 
+    
+    dossier = Create_directory(dossier, type)
+    
+    
+    for case in case_1D: 
+        All_df = pd.DataFrame()
+        pressure, T_ox, strain_rate,mixture_frac = case
+        # Définir le mélange de carburant (phi = 1)
+        fuel_mix = f'{fuel1}:{mixture_frac}, {fuel2}:{1 - mixture_frac}' 
+        
+        f = ct.CounterflowDiffusionFlame(t_gas, width=width)
+        f.flame.set_steady_tolerances(default=tol_ss)
+        f.flame.set_transient_tolerances(default=tol_ts)
+        f.P = ct.one_atm
+        
+        f.fuel_inlet.mdot = 0.305
+        f.fuel_inlet.X = fuel_mix
+        f.fuel_inlet.T = 300
+        f.oxidizer_inlet.mdot = 0.1
+        f.oxidizer_inlet.X = oxidizer
+        f.oxidizer_inlet.T = T_ox
+        f.energy_enabled = True
+        
+        F = ct.Quantity(t_gas, constant='HP')
+        A = ct.Quantity(t_gas, constant='HP')
+        F.TPX = 300, pressure, fuel_mix
+        A.TPX = T_ox, pressure, oxidizer
+        rho_f = F.density
+        rho_o = A.density
+        
+        f.solve(loglevel=0, auto=True)
+        All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+        # Gestion de la dicotomie pour l'extinction 
+        exp_d_a = -1. / 2.
+        exp_u_a = 1. / 2.
+        exp_V_a = 1.
+        exp_lam_a = 2.
+        exp_mdot_a = 1. / 2.
+
+        alpha = [1.]
+        delta_alpha = 10.
+        delta_alpha_factor = 10.
+        delta_alpha_min = 0.01
+        delta_T_min = 1  # K
+        T_limit = T_ox
+        
+        n = 0
+        n_last_burning = 0
+        T_max = [np.max(f.T)]
+        a_max = [np.max(np.abs(np.gradient(f.velocity) / np.gradient(f.grid)))]
+        
+        
+        
+        while True:
+            n += 1
+            alpha.append(alpha[n_last_burning] + delta_alpha)
+            strain_factor = alpha[-1] / alpha[n_last_burning]
+
+            # Mise à l'échelle
+            f.flame.grid *= strain_factor ** exp_d_a
+            norm_grid = f.grid / (f.grid[-1] - f.grid[0])
+            f.fuel_inlet.mdot *= strain_factor ** exp_mdot_a
+            f.oxidizer_inlet.mdot *= strain_factor ** exp_mdot_a
+            f.set_profile('velocity', norm_grid, f.velocity * strain_factor ** exp_u_a)
+            f.set_profile('spread_rate', norm_grid, f.spread_rate * strain_factor ** exp_V_a)
+            f.set_profile('lambda', norm_grid, f.L * strain_factor ** exp_lam_a)
+            
+            try:
+                f.solve(loglevel=0,auto=True)
+            except ct.CanteraError:
+                delta_alpha /= delta_alpha_factor
+                f = last_flame
+                continue
+            
+            Tmax = np.max(f.T)
+            Amax = np.max(np.abs(np.gradient(f.velocity) / np.gradient(f.grid)))
+            T_max.append(Tmax)
+            a_max.append(Amax)
+            
+            if not np.isclose(Tmax, T_limit):
+                n_last_burning = n
+                last_flame = f
+                All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+                
+            elif ((T_max[-2] - T_max[-1]) < delta_T_min and delta_alpha < delta_alpha_min) or a_max[-2] > a_max[-1]:
+                All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+                break
+            else:
+                delta_alpha /= delta_alpha_factor
+                f = last_flame
+        
+        if save:
+            fname = f"CF_T{T_ox}_extinction.csv"
+            All_df.to_csv(os.path.join(dossier, fname), index=False)
+            
+    return All_df
+                   
+def concat_flame(f,df,rho_fuel,rho_inlet,width) : 
+    species_names = [f"Y_{name}" for name in f.gas.species_names]
+    loc_df = pd.DataFrame(f.Y.T, columns=species_names)
+    loc_df["grid"] =f.grid
+    loc_df["T"] =f.T
+    loc_df["T_Init"] = f.oxidizer_inlet.T
+    loc_df["local_strain"] = np.max(np.abs(np.gradient(f.velocity) / np.gradient(f.grid)))
+    loc_df["global_strain"] = (f.fuel_inlet.mdot / rho_fuel + f.oxidizer_inlet.mdot / rho_inlet) / width
+    loc_df["velocity"] = f.velocity
+    return pd.concat([df,loc_df],ignore_index=True)  
+
 def Launch_processing_0D_csv(
     Ref_csv : list,
     Data_csv: list, 
