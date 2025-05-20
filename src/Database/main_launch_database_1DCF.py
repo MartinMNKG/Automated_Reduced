@@ -23,19 +23,28 @@ Name_Folder = "1D_CF_Ex"
 Path = Create_directory(main_path,Name_Folder)
 
 pressure_1DCF = np.linspace(1,1,1).tolist()
-temperature_1DCF = np.linspace(800,1000,3).tolist() # Temperature of the Oxydizer 
+temperature_1DCF = np.linspace(800,900,2).tolist() # Temperature of the Oxydizer 
 strain_1DCF = np.round(np.linspace(1.0, 1.0, 1), 1).tolist() # Strain 
 mixture_1DCF =np.linspace(0.85,0.85,1).tolist()
+
 
 
 case_1DCF = generate_test_cases_bifuel(pressure_1DCF,temperature_1DCF,strain_1DCF,mixture_1DCF)
 if launch == True : 
     # Launch 1D database 
+    start = time.time()
     data_ref = Sim1D_CF_Extinction(gas_det,fuel1,fuel2,oxidizer,case_1DCF,Name_Ref,Path,save)
+    print(f"Time simu Ref = {time.time()-start }")
+    start = time.time() 
     data = Sim1D_CF_Extinction(gas_red,fuel1,fuel2,oxidizer,case_1DCF,Name_Data,Path,save)
-    
-#     Processing_Ref  = Processing_1D_CF_ref(data_ref,case_1DCF,Name_Ref,Path,save)
-#     Processing_Data = Processing_1D_CF_data(data,Processing_Ref,case_1DCF,Name_Data,Path,save)
+    print(f"Time simu Data = {time.time() - start}")
+    start = time.time()
+    Processing_Ref  = Processing_1D_CF_ref(data_ref,case_1DCF,Name_Ref,Path,save)
+    print(f"Time Process Ref = {time.time() - start }")
+    start = time.time()
+    Processing_Data = Processing_1D_CF_data(data,Processing_Ref,case_1DCF,Name_Data,Path,save)
+    print(f"Time Process Data = {time.time() -start}")
+
     
 # else  : 
     

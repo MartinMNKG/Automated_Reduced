@@ -193,9 +193,9 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
     
     dossier = Create_directory(dossier, type)
     
-    
+    All_df =pd.DataFrame()
     for case in case_1D: 
-        All_df = pd.DataFrame()
+        Case_df = pd.DataFrame()
         pressure, T_ox, strain_rate,mixture_frac = case
         # Définir le mélange de carburant (phi = 1)
         fuel_mix = f'{fuel1}:{mixture_frac}, {fuel2}:{1 - mixture_frac}' 
@@ -221,7 +221,7 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
         rho_o = A.density
         
         f.solve(loglevel=0, auto=True)
-        All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+        Case_df = concat_flame(f,Case_df,rho_f,rho_o,width)
         # Gestion de la dicotomie pour l'extinction 
         exp_d_a = -1. / 2.
         exp_u_a = 1. / 2.
@@ -230,8 +230,8 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
         exp_mdot_a = 1. / 2.
 
         alpha = [1.]
-        delta_alpha = 10.
-        delta_alpha_factor = 10.
+        delta_alpha = 5.
+        delta_alpha_factor = 2.
         delta_alpha_min = 0.01
         delta_T_min = 1  # K
         T_limit = T_ox
@@ -272,18 +272,21 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
             if not np.isclose(Tmax, T_limit):
                 n_last_burning = n
                 last_flame = f
-                All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+                Case_df = concat_flame(f,Case_df,rho_f,rho_o,width)
                 
-            elif ((T_max[-2] - T_max[-1]) < delta_T_min and delta_alpha < delta_alpha_min) or a_max[-2] > a_max[-1]:
-                All_df = concat_flame(f,All_df,rho_f,rho_o,width)
+            elif ((T_max[-2] - T_max[-1]) < delta_T_min and delta_alpha < delta_alpha_min) or a_max[-2] > a_max[-1] :
                 break
             else:
                 delta_alpha /= delta_alpha_factor
                 f = last_flame
-        
+                
+        All_df = pd.concat([All_df,Case_df])
+        All_df["mixture"] = mixture_frac
+        All_df["pressure"] = pressure
         if save:
             fname = f"CF_T{T_ox}_extinction.csv"
-            All_df.to_csv(os.path.join(dossier, fname), index=False)
+            Case_df.to_csv(os.path.join(dossier, fname), index=False)
+            
             
     return All_df
                    
@@ -514,7 +517,6 @@ def Launch_processing_1D_CF_csv(
     
     return Data_Ref,Data
 
-
 def Processing_1D_CF_ref(
     input_data: pd.DataFrame,
     cases: list,
@@ -522,34 +524,39 @@ def Processing_1D_CF_ref(
     Path: str,
     save_csv: bool
 ) : 
-    data_processing = pd.DataFrame()
+    data_processing_ref = pd.DataFrame()
     species = [col for col in input_data.columns if col.startswith("Y_")]
-    
-    for c in cases : 
-        New_data_ref = pd.DataFrame()
-        pressure, temperature, strain_rate, mixture = c 
-        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["strain_rate"] == strain_rate)&(input_data["Mixt_Init"] == mixture)].copy()
-        New_data_ref["common_grid"] = data_loc["grid"]
+    for T_Init in input_data["T_Init"].unique() : 
+        loc = pd.DataFrame() 
+        loc_T_data_ref = input_data[input_data["T_Init"]==T_Init]
+        for global_strain in loc_T_data_ref["global_strain"].unique() : 
+            New_data = pd.DataFrame()
+            loc_ST_T_data_ref =  loc_T_data_ref[loc_T_data_ref["global_strain"]==global_strain]
+            New_data["common_grid"] = loc_ST_T_data_ref["grid"]
+            for s in species : 
+                int_func = interp1d(loc_ST_T_data_ref["grid"],loc_ST_T_data_ref[s],fill_value='extrapolate')
+                New_data[s] = int_func(New_data["common_grid"])
+            
+                int_func = interp1d(loc_ST_T_data_ref["grid"],loc_ST_T_data_ref["T"],fill_value='extrapolate')
+                
+            New_data["T"] = int_func(New_data["common_grid"])
+            
+            int_func = interp1d(loc_ST_T_data_ref["grid"], loc_ST_T_data_ref["velocity"], fill_value="extrapolate")
+            New_data["velocity"]=int_func(New_data["common_grid"])
+            
+            New_data["T_Init"] = T_Init
+            New_data["global_strain"] = global_strain
+            New_data["local_strain"] = loc_ST_T_data_ref["local_strain"].iloc[0]
+            
+            loc = pd.concat([loc,New_data])
         
-        for s in species : 
-            int_func = interp1d(data_loc["grid"],data_loc[s],fill_value='extrapolate')
-            New_data_ref[s] = int_func(New_data_ref["common_grid"])
-        
-        int_func = interp1d(data_loc["grid"],data_loc["T"],fill_value='extrapolate')
-        New_data_ref["T"] = int_func(New_data_ref["common_grid"])
-        
-        New_data_ref["velocity"] = data_loc["velocity"].iloc[0]
-        New_data_ref["P_Init"]  = pressure
-        New_data_ref["T_Init"]  = temperature
-        New_data_ref["strain_rate"]  =   strain_rate  
-        New_data_ref["Mixt_Init"] = mixture     
-        
-        data_processing = pd.concat([data_processing,New_data_ref],ignore_index=True) 
-        
+        data_processing_ref = pd.concat([loc,data_processing_ref])
+    data_processing_ref["max_strain"] = data_processing_ref["local_strain"].max()
+            
     if save_csv : 
-        data_processing.to_csv(os.path.join(Path, f"Processing_{name_ref}.csv"))
+        data_processing_ref.to_csv(os.path.join(Path, f"Processing_{name_ref}.csv"))
         
-    return data_processing
+    return data_processing_ref
 
 
 def Processing_1D_CF_data(
@@ -562,30 +569,38 @@ def Processing_1D_CF_data(
 ) : 
     data_processing = pd.DataFrame()
     species = [col for col in input_data.columns if col.startswith("Y_")]
+
+    for T_Init in input_data["T_Init"].unique() : 
+        loc = pd.DataFrame()
+        loc_data_processing_ref_T = input_data_ref[input_data_ref["T_Init"]==T_Init]
+        loc_data_T=input_data[input_data["T_Init"]==T_Init] 
+        for global_strain in loc_data_T["global_strain"].unique() : 
+            if global_strain not in loc_data_processing_ref_T["global_strain"].unique() :
+                
+                break
+            else : 
+                New_data = pd.DataFrame()
+                data_loc = loc_data_T[loc_data_T["global_strain"]==global_strain]
+                New_data["common_grid"] =loc_data_processing_ref_T[loc_data_processing_ref_T["global_strain"]==global_strain]["common_grid"] 
+                for s in species:
+                    int_func = interp1d(data_loc["grid"], data_loc[s], fill_value="extrapolate")
+                    New_data[s] = int_func(New_data["common_grid"])
+                    
+                int_func = interp1d(data_loc["grid"], data_loc["T"], fill_value="extrapolate")
+                New_data["T"] = int_func(New_data["common_grid"])
+                
+                int_func = interp1d(data_loc["grid"], data_loc["velocity"], fill_value="extrapolate")
+                New_data["velocity"]=int_func(New_data["common_grid"])
+                
+                New_data["T_init"] = T_Init
+                New_data["global_strain"] = global_strain
+                New_data["local_strain"] = data_loc["local_strain"].iloc[0]
+                
+                loc = pd.concat([loc,New_data])
+                
+        loc["max_strain"] = max(loc_data_T["local_strain"])
+        data_processing = pd.concat([data_processing,loc])
     
-    for c in cases : 
-        pressure, temperature, strain_rate, mixture = c
-        data_loc= input_data[(input_data["P_Init"] == pressure)&(input_data["T_Init"] ==temperature)&(input_data["strain_rate"] == strain_rate)&(input_data["Mixt_Init"] == mixture)].copy()
-        loc_common_grid = input_data_ref[(input_data_ref["P_Init"] == pressure)&(input_data_ref["T_Init"] ==temperature)&(input_data_ref["strain_rate"] == strain_rate)&(input_data_ref["Mixt_Init"] == mixture)]["common_grid"]
-        
-        New_data = pd.DataFrame()
-        New_data["common_grid"] = loc_common_grid
-        
-        for s in species:
-            int_func = interp1d(data_loc["grid"], data_loc[s], fill_value="extrapolate")
-            New_data[s] = int_func(loc_common_grid)
-            
-        int_func = interp1d(data_loc["grid"], data_loc["T"], fill_value="extrapolate")
-        New_data["T"] = int_func(loc_common_grid)
-        
-        New_data["velocity"] = data_loc["velocity"].iloc[0]
-        New_data["P_Init"] = pressure
-        New_data["T_Init"] = temperature
-        New_data["strain_rate"] = strain_rate
-        New_data["Mixt_Init"] = mixture
-            
-        data_processing = pd.concat([data_processing,New_data],ignore_index=True) 
-        
     if save_csv : 
         data_processing.to_csv(os.path.join(Path, f"Processing_{name_data}.csv"))
         
