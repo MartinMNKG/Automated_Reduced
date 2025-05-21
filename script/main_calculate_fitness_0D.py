@@ -1,17 +1,25 @@
-from ORCH import Calculate_ORCH
-from PMO import Calculate_PMO
-from AED import Calculate_AED 
-from AED_ML import Calculate_AED_ML
-from Brookesia import Calculate_Brookesia 
-from ruamel.yaml import YAML
+
 import numpy as np
 import os 
+import sys
 import pandas as pd 
+from ruamel.yaml import YAML
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+
+
+
+from Fitness.ORCH import Calculate_ORCH
+from Fitness.PMO import Calculate_PMO
+from Fitness.AED import Calculate_AED 
+from Fitness.AED_ML import Calculate_AED_ML
+from Fitness.Brookesia import Calculate_Brookesia 
+
 yaml = YAML()
 main_path = os.getcwd()
 flag_output = False
 Name_Folder = "0D"
-Name_File = "Reduced"
+Name_File = "OptimB"
 Path = os.path.join(main_path,f"{Name_Folder}")
 
 with open("./data/Info_species_fitness.yaml", "r") as f:
