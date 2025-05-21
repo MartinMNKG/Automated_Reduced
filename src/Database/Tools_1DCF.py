@@ -66,17 +66,16 @@ def Sim1D_CF(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
 
     return all_df
 
-
-
 def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
     tol_ss = [1.0e-6, 1.0e-9]
     tol_ts = [1.0e-6, 1.0e-9]
     width = 0.02 
     
     dossier = Create_directory(dossier, type)
-    
+    print(type)
     All_df =pd.DataFrame()
     for case in case_1D: 
+        print(case)
         Case_df = pd.DataFrame()
         pressure, T_ox, strain_rate,mixture_frac = case
         # Définir le mélange de carburant (phi = 1)

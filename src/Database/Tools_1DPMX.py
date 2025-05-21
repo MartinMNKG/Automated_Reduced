@@ -11,9 +11,11 @@ from .utils import Create_directory, concat_csv_list
 
 
 def Sim1D(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) : 
+    print(type)
     dossier = Create_directory(dossier,type)
     all_df = pd.DataFrame()
-    for case in case_1D : 
+    for case in case_1D :
+        print(case) 
         pressure, temperature, equivalence_ratio,mixture = case
         fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
 
