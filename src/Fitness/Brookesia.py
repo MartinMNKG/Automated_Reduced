@@ -7,13 +7,13 @@ import seaborn as sns
 import os
 
 
-def Calculate_Brookesia(data_d,data_r,input,Path,flag_output) : 
+def Calculate_Brookesia(data_d,data_r,input,flag_output) : 
     Error_type = "max"
     
     
     case = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
     lenght= int(data_d.shape[0]/ case)
-    species = list(input.keys())
+    species = input
     
     Err_IDT =[] 
     Err_T = []
@@ -34,12 +34,11 @@ def Calculate_Brookesia(data_d,data_r,input,Path,flag_output) :
         
         Err_loc_s =[]
         for s in species : 
-            if input[s]["Brookesia"] == 1 : 
-                top_s = np.abs(np.trapezoid(loc_data_d[s],loc_data_d["common_grid"]) - np.trapezoid(loc_data_r[s],loc_data_r["common_grid"]))
-                
-                bot_s = np.trapezoid(loc_data_d[s],loc_data_d["common_grid"])
-                Err_loc_s.append(top_s/bot_s)
-                Err.append(top_s/bot_s)
+            top_s = np.abs(np.trapezoid(loc_data_d[s],loc_data_d["common_grid"]) - np.trapezoid(loc_data_r[s],loc_data_r["common_grid"]))
+            
+            bot_s = np.trapezoid(loc_data_d[s],loc_data_d["common_grid"])
+            Err_loc_s.append(top_s/bot_s)
+            Err.append(top_s/bot_s)
         Err_s.append(Err_loc_s)
      
     print(f"Err BROOKESIA mean ={1/np.mean(Err):0.2E}")

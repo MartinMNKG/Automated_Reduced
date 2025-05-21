@@ -5,8 +5,8 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 import os
 
-def Calculate_AED_ML(data_d,data_r,input,Path,flag_output) :
-    species = [species for species, values in input.items() if values["AED"] == 1]
+def Calculate_AED_ML(data_d,data_r,input,flag_output) :
+    species = input
     
     data_d_log=data_d[species].apply(np.log)  
     data_r_log=data_r[species].apply(np.log) 

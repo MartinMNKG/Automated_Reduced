@@ -6,10 +6,10 @@ import os
 
 
 
-def Calculate_PMO(data_d,data_r,data,Path,flag_output) : 
+def Calculate_PMO(data_d,data_r,input,flag_output) : 
     case = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
     lenght= int(data_d.shape[0]/ case)
-    species = list(data.keys())
+    species = [s for group in input.values() for s in group]
     F1 = []
     F2 = []
     F3 = []
@@ -22,7 +22,7 @@ def Calculate_PMO(data_d,data_r,data,Path,flag_output) :
         loc_F2 =[] 
         for s in species : 
             
-            if data[s]["Integrate"] == 1 : 
+            if s in input["integrate_species"]: 
                 top1 = np.trapezoid((np.abs(loc_data_r[s]-loc_data_d[s])),loc_data_d["common_grid"])
                 
                 bot1 = np.trapezoid(np.abs(np.array(loc_data_d[s])), np.array(loc_data_d["common_grid"]))
@@ -31,7 +31,7 @@ def Calculate_PMO(data_d,data_r,data,Path,flag_output) :
             
             
             
-            if data[s]["Peak"] == 1 :  
+            if s in input["peak_species"] :  
                 top2 = np.max(loc_data_d[s])-np.max(loc_data_r[s])
                 bot2 = np.max(loc_data_d[s])
                 loc_F2.append((top2 / bot2) ** 2 if bot2 != 0 else 0)

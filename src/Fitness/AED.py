@@ -4,8 +4,8 @@ import pandas as pd
 import seaborn as sns
 import os
 
-def Calculate_AED(data_d,data_r,input,Path,flag_output) :
-    species = [species for species, values in input.items() if values["AED"] == 1]
+def Calculate_AED(data_d,data_r,input,flag_output) :
+    species = input
     
     Err = pd.DataFrame()       
     for s in species : 
