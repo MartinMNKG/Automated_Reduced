@@ -11,31 +11,31 @@ The tool automatically compares two chemical kinetic mechanisms by simulating ea
 
 ---
 
-## \U0001f4c1 Project Structure
+## 📁 Project Structure
 
 ```
 project/
-\u2502
-\u251c\u2500\u2500 data/
-\u2502   \u251c\u2500\u2500 detailed.yaml         # Detailed mechanism
-\u2502   \u2514\u2500\u2500 reduced.yaml          # Reduced mechanism
-\u2502
-\u251c\u2500\u2500 src/
-\u2502   \u251c\u2500\u2500 Database/             # Tools to simulate and process the data
-\u2502   \u2514\u2500\u2500 Fitness/              # Tools to compute fitness metrics from processed data
-\u2502
-\u251c\u2500\u2500 script/
-\u2502   \u251c\u2500\u2500 main_launch_database_0D.py       # Launch 0D simulations
-\u2502   \u251c\u2500\u2500 main_launch_database_1DPMX.py    # Launch 1D premixed flame simulations
-\u2502   \u251c\u2500\u2500 main_launch_database_1DCF.py     # Launch 1D counterflow flame simulations
-\u2502   \u2514\u2500\u2500 main_calculate_fitness_0D.py     # Calculate fitness for 0D simulations
-\u2502
-\u2514\u2500\u2500 README.md
+│
+├── data/
+│   ├── detailed.yaml         # Detailed mechanism
+│   └── reduced.yaml          # Reduced mechanism
+│
+├── src/
+│   ├── Database/             # Tools to simulate and process the data
+│   └── Fitness/              # Tools to compute fitness metrics from processed data
+│
+├── script/
+│   ├── main_launch_database_0D.py       # Launch 0D simulations
+│   ├── main_launch_database_1DPMX.py    # Launch 1D premixed flame simulations
+│   ├── main_launch_database_1DCF.py     # Launch 1D counterflow flame simulations
+│   └── main_calculate_fitness_0D.py     # Calculate fitness for 0D simulations
+│
+└── README.md
 ```
 
 ---
 
-## \U0001f4bb Installation
+## 💻 Installation
 
 Install required dependencies:
 
@@ -45,7 +45,7 @@ pip install -r rq.txt
 
 ---
 
-## \U0001f680 Running Simulations and Processing Data
+## 🚀 Running Simulations and Processing Data
 
 You have two options:
 
@@ -56,7 +56,7 @@ You can also enable CSV export for both raw Cantera simulation results and proce
 
 ---
 
-## \U0001f52c 0D Homogeneous Reactor
+## 🔬 0D Homogeneous Reactor
 
 To launch 0D homogeneous reactor simulations:
 
@@ -68,12 +68,12 @@ python script/main_launch_database_0D.py
 
 - Range of initial pressures
 - Range of initial temperatures
-- Range of equivalence ratios (\u03d5)
-- Range of fuel mixture ratios (e.g., NH\u2083/H\u2082)
+- Range of equivalence ratios (ϕ)
+- Range of fuel mixture ratios (e.g., NH₃/H₂)
 
 ---
 
-## \U0001f525 1D Premixed Diffusion Flame
+## 🔥 1D Premixed Diffusion Flame
 
 To launch premixed flame simulations:
 
@@ -85,12 +85,12 @@ python script/main_launch_database_1DPMX.py
 
 - Range of initial pressures
 - Range of initial temperatures
-- Range of equivalence ratios (\u03d5)
+- Range of equivalence ratios (ϕ)
 - Range of fuel mixture ratios
 
 ---
 
-## \U0001f32a\ufe0f 1D Counterflow Diffusion Flame
+## 🌪️ 1D Counterflow Diffusion Flame
 
 To launch counterflow diffusion flame simulations:
 
