@@ -3,8 +3,7 @@ import cantera as ct
 import pandas as pd 
 import os
 from scipy.interpolate import interp1d
-from utils import Create_directory
-from utils import concat_csv_list
+from .utils import Create_directory, concat_csv_list
 
 
 def Sim1D_CF(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) : 

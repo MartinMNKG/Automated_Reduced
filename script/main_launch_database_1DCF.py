@@ -1,11 +1,13 @@
 import time 
-import os 
+import os
+import sys 
 import glob 
 import numpy as np 
 import cantera as ct 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from ..Database.utils import generate_test_cases_bifuel, Create_directory
-from ..Database.Tools_1DCF import Sim1D_CF_Extinction, Processing_1D_CF_ref, Processing_1D_CF_data, Launch_processing_1D_CF_csv
+from Database.utils import generate_test_cases_bifuel, Create_directory
+from Database.Tools_1DCF import Sim1D_CF_Extinction, Processing_1D_CF_ref, Processing_1D_CF_data, Launch_processing_1D_CF_csv
 
 
 

@@ -4,8 +4,7 @@ import pandas as pd
 import os
 from scipy.interpolate import interp1d
 from scipy.integrate import cumtrapz
-from utils import Create_directory
-from utils import concat_csv_list
+from .utils import Create_directory, concat_csv_list
 
 
 

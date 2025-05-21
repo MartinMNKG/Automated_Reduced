@@ -1,11 +1,14 @@
 import time 
-import os 
+import os
+import sys 
 import glob 
 import numpy as np 
 import cantera as ct 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from ..Database.utils import generate_test_cases_bifuel, Create_directory
-from ..Database.Tools_0D import Sim0D, Processing_0D_ref, Processing_0D_data, Launch_processing_0D_csv
+
+from Database.utils import generate_test_cases_bifuel, Create_directory
+from Database.Tools_0D import Sim0D, Processing_0D_ref, Processing_0D_data, Launch_processing_0D_csv
 
 
 start_simu = time.time()
@@ -35,7 +38,7 @@ _gas_red_copy = ct.Solution(Reduced_file)
 Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1000,2000,5).tolist()
-phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
+phi_0D = np.round(np.linspace(1.0, 1.0, 1), 1).tolist()
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
 tmax = 0.1
