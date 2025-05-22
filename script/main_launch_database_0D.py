@@ -14,9 +14,9 @@ from Database.Tools_0D import Sim0D, Processing_0D_ref, Processing_0D_data, Laun
 start_simu = time.time()
 main_path = os.getcwd()
 
-Name_Folder = "0D_Test"
+Name_Folder = "0D"
 launch = True  # Launch Simulation
-save = False # Save into CSV 
+save = True # Save into CSV 
 #################
 ##   Cantera   ##
 #################
@@ -38,10 +38,10 @@ _gas_red_copy = ct.Solution(Reduced_file)
 Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1000,2000,5).tolist()
-phi_0D = np.round(np.linspace(1.0, 1.0, 1), 1).tolist()
+phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
-tmax = 0.1
+tmax = 0.01
 dt= 1e-6
 
 length = 1000
@@ -49,17 +49,19 @@ case_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0
 
 if launch == True : 
     #Launch 0D reactor Base
-    
+    start = time.time()
     data_ref = Sim0D(gas_det,_gas_det_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Ref,Path,save) # Return all sim into 1 datafram
+    print(f"Time simu Ref = {time.time()-start }")
+    start = time.time() 
     data = Sim0D(gas_red,_gas_red_copy,fuel1,fuel2,oxidizer,case_0D,dt,tmax,Name_Data,Path,save)
-    
+    print(f"Time simu Data = {time.time() - start}")
+    start = time.time()
     #Process Data Ref and Data 
     Processing_Ref  = Processing_0D_ref(data_ref,case_0D,length,Name_Ref,Path,save) # Return all sim process into 1 datafram 
+    print(f"Time Process Ref = {time.time() - start }")
+    start = time.time()
     Processing_Data = Processing_0D_data(data,Processing_Ref,case_0D,Name_Data,Path,save)
-    
-    Processing_Ref.to_csv(os.path.join(Path, f"Processing_NoWriting_{Name_Ref}.csv"))
-    Processing_Data.to_csv(os.path.join(Path, f"Processing_NoWriting_{Name_Data}.csv"))
-    
+    print(f"Time Process Data = {time.time() -start}")
 
 else : 
 

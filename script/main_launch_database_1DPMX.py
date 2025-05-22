@@ -12,10 +12,7 @@ from Database.Tools_1DPMX import Sim1D, Processing_1D_PMX_ref, Processing_1D_PMX
 main_path = os.getcwd()
 
 launch = True 
-save = False 
-
-start_time = time.time()
-
+save = True 
 
 fuel1 = "NH3"
 fuel2 = "H2"
@@ -48,24 +45,18 @@ case_1D = generate_test_cases_bifuel(pressure_1D,temperature_1D,phi_1D,mixture_1
     
 if launch == True : 
     # Launch 1D database 
-    
-    
+    start = time.time()
     data_ref = Sim1D(gas_det,fuel1,fuel2,oxidizer,case_1D,Name_Ref,Path,save)
-    
-    print(f"Time Simu Ref : { time.time()- start_time}")
-    simu_data = time.time()
-    
+    print(f"Time simu Ref = {time.time()-start }")
+    start = time.time() 
     data = Sim1D(gas_red,fuel1,fuel2,oxidizer,case_1D,Name_Data,Path,save)
-    
-    print(f'Time Simu Data = { time.time() - simu_data }')
-    process = time.time()
-    
+    print(f"Time simu Data = {time.time() - start}")
+    start = time.time()
     Processing_Ref  = Processing_1D_PMX_ref(data_ref,case_1D,Name_Ref,Path,save)
+    print(f"Time Process Ref = {time.time() - start }")
+    start = time.time()
     Processing_Data = Processing_1D_PMX_data(data,Processing_Ref,case_1D,Name_Data,Path,save)
-    
-    print(f"Time Processing = { time.time() - process }")
-    Processing_Ref.to_csv(os.path.join(Path, f"Processing_{Name_Ref}.csv"))
-    Processing_Data.to_csv(os.path.join(Path, f"Processing_{Name_Data}.csv"))
+    print(f"Time Process Data = {time.time() -start}")
     
 else  : 
     
@@ -73,4 +64,3 @@ else  :
     List_Data = glob.glob(os.path.join(Path,f"{Name_Data}/*.csv"))
     Processing_Ref2,Processing_Data2 = Launch_processing_1D_PMX_csv(List_Ref,List_Data,case_1D,Name_Ref,Name_Data,Path,save)
     
-print(f"End = { time.time() - start_time }")
