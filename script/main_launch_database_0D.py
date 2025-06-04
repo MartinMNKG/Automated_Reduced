@@ -14,7 +14,7 @@ from Database.Tools_0D import Sim0D, Processing_0D_ref, Processing_0D_data, Laun
 start_simu = time.time()
 main_path = os.getcwd()
 
-Name_Folder = "0D"
+Name_Folder = "0D_LUC"
 launch = True  # Launch Simulation
 save = True # Save into CSV 
 #################
@@ -27,8 +27,8 @@ oxidizer = "O2:0.21, N2:0.79, AR : 0.01"
 
 Detailed_file = "./data/detailed.yaml"
 Name_Ref = "Detailed"
-Reduced_file = "./data/STEC_B.yaml"
-Name_Data = "OptimB"
+Reduced_file = "./data/reduced.yaml"
+Name_Data = "Reduced"
 
 gas_det = ct.Solution(Detailed_file)
 gas_red = ct.Solution(Reduced_file)
@@ -37,11 +37,11 @@ _gas_red_copy = ct.Solution(Reduced_file)
 
 Path = Create_directory(main_path,Name_Folder)
 pressure_0D = np.linspace(1,1,1).tolist()
-temperature_0D = np.linspace(1000,2000,5).tolist()
-phi_0D = np.round(np.linspace(0.8, 1.2, 5), 1).tolist()
+temperature_0D = np.linspace(1300,1300,1).tolist()
+phi_0D = [0.5,1.5,6,13]
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 
-tmax = 0.01
+tmax = 0.1
 dt= 1e-6
 
 length = 1000
