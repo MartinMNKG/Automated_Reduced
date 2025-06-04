@@ -34,13 +34,13 @@ Name_Folder = "1D_CF_Ex"
 Path = Create_directory(main_path,Name_Folder)
 
 pressure_1DCF = np.linspace(1,1,1).tolist()
-temperature_1DCF = np.linspace(800,900,2).tolist() # Temperature of the Oxydizer 
-strain_1DCF = np.round(np.linspace(1.0, 1.0, 1), 1).tolist() # Strain 
+temperature_Ox = np.linspace(800,900,2).tolist() # Temperature of the Oxydizer 
+temperature_fuel = np.linspace(300,300,2).tolist() # Strain 
 mixture_1DCF =np.linspace(0.85,0.85,1).tolist()
 
 
 
-case_1DCF = generate_test_cases_bifuel(pressure_1DCF,temperature_1DCF,strain_1DCF,mixture_1DCF)
+case_1DCF = generate_test_cases_bifuel(pressure_1DCF,temperature_Ox,temperature_fuel,mixture_1DCF)
 if launch == True : 
     # Launch 1D database 
     start = time.time()

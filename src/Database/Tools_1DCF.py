@@ -77,7 +77,7 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
     for case in case_1D: 
         print(case)
         Case_df = pd.DataFrame()
-        pressure, T_ox, strain_rate,mixture_frac = case
+        pressure, T_ox, T_fuel,mixture_frac = case
         # Définir le mélange de carburant (phi = 1)
         fuel_mix = f'{fuel1}:{mixture_frac}, {fuel2}:{1 - mixture_frac}' 
         
@@ -88,7 +88,7 @@ def Sim1D_CF_Extinction(t_gas,fuel1,fuel2,oxidizer,case_1D,type,dossier,save) :
         
         f.fuel_inlet.mdot = 0.305
         f.fuel_inlet.X = fuel_mix
-        f.fuel_inlet.T = 300
+        f.fuel_inlet.T = T_fuel
         f.oxidizer_inlet.mdot = 0.1
         f.oxidizer_inlet.X = oxidizer
         f.oxidizer_inlet.T = T_ox
