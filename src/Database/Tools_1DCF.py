@@ -279,7 +279,7 @@ def Processing_1D_CF_data(
                 int_func = interp1d(data_loc["grid"], data_loc["velocity"], fill_value="extrapolate")
                 New_data["velocity"]=int_func(New_data["common_grid"])
                 
-                New_data["T_init"] = T_Init
+                New_data["T_Init"] = T_Init
                 New_data["global_strain"] = global_strain
                 New_data["local_strain"] = data_loc["local_strain"].iloc[0]
                 
