@@ -6,7 +6,11 @@ from sklearn.preprocessing import StandardScaler
 import os
 
 def Calculate_AED_ML(data_d,data_r,input,flag_output) :
-    species = input
+    
+    if isinstance(input, list) and input:
+        species = input
+    else:
+        species = [col for col in data_r.columns if col.startswith("Y_")]
     
     data_d_log=data_d[species].apply(np.log)  
     data_r_log=data_r[species].apply(np.log) 

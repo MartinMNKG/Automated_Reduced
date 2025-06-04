@@ -5,8 +5,11 @@ import seaborn as sns
 import os
 
 def Calculate_AED(data_d,data_r,input,flag_output) :
-    species = input
-    
+    if isinstance(input, list) and input:
+        species = input
+    else:
+        species = [col for col in data_r.columns if col.startswith("Y_")]
+        
     Err = pd.DataFrame()       
     for s in species : 
         Err[s] = np.abs(data_d[s]-data_r[s])
