@@ -7,8 +7,8 @@ import os
 
 def Calculate_AED_ML(data_d,data_r,input,flag_output) :
     
-    if isinstance(input, list) and input:
-        species = input
+    if isinstance(input, dict) and input:
+        species = input.keys()
     else:
         species = [col for col in data_r.columns if col.startswith("Y_")]
     

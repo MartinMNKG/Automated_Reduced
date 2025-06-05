@@ -14,8 +14,8 @@ def Calculate_Brookesia(data_d,data_r,input,flag_output) :
     case = data_d["P_Init"].nunique()*  data_d["T_Init"].nunique()  *  data_d["Phi_Init"].nunique()  *  data_d["Mixt_Init"].nunique() 
     lenght= int(data_d.shape[0]/ case)
     
-    if isinstance(input, list) and input:
-        species = input
+    if isinstance(input, dict) and input:
+        species = input.keys()
     else:
         species = [col for col in data_r.columns if col.startswith("Y_")]
     
