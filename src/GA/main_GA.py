@@ -16,14 +16,14 @@ matplotlib.use('Agg')
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from Tools import get_factor_dim_ln, rxns_yaml_arr_list2_ln,make_dir, write_yaml
+from GA.Tools import get_factor_dim_ln, rxns_yaml_arr_list2_ln,make_dir, write_yaml
 from Database.Tools_0D import Sim0D,Processing_0D_ref,Processing_0D_data
 
 
 def Launch_GA(
     Name_Folder : str,
     Fitness,
-    input_fitness : list,
+    input_fitness,
     Detailed_file : str,
     Reduced_file : str,
     fuel1 :str,
@@ -224,6 +224,10 @@ def Launch_GA(
         best_individual = tools.selBest(population, k=1)[0]
         print("Best fitness:", best_individual.fitness.values[0])
         opt_gas = rxns_yaml_arr_list2_ln(Reduced_gas,best_individual)
+        data = Sim0D(opt_gas,opt_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"Individual","",False)
+        Processing_Data = Processing_0D_data(data,Processing_Ref,cases_0D,"Optimized",dir,True)
+        
+        
         write_yaml(opt_gas ,os.path.join(dir,f"/Best_Individual.yaml"))
 
         generations = logbook.select("gen")

@@ -10,14 +10,14 @@ from Fitness.Brookesia import Calculate_Brookesia
 from Fitness.PMO import Calculate_PMO
 from Fitness.ORCH import Calculate_ORCH
 
-from main_GA import Launch_GA 
+from GA.main_GA import Launch_GA 
 
 #Create Calcul Folder 
-Name_Folder = "GA_2"
+Name_Folder = "GA_AED_ML_ALLSPECIES"
 
 # Fitness used 
-Fitness = Calculate_AED
-input_fitness = ["Y_H2", "Y_NH3", "Y_O2", "Y_OH", "Y_NO", 'Y_H2O', 'Y_NO2', 'Y_N2O'] # If empty, use all species of Reduced 
+Fitness = Calculate_AED_ML
+input_fitness = [] # If empty, use all species of Reduced 
 
 # Cantera inputs 
 Detailed_file = "/work/kotlarcm/WORK/Automated_Reduced/data/detailed.yaml"
@@ -31,14 +31,14 @@ tmax = 0.1
 dt= 1e-6
 length = 1000
 pressure_0D = np.linspace(1,1,1).tolist()
-temperature_0D = np.linspace(1500,1500,1).tolist()
-phi_0D = [1.0] #[0.5,1.5,6,13] # Luc Data 
+temperature_0D = np.linspace(1300,1300,1).tolist() #1300 
+phi_0D = [0.5,1.5,6,13] # Luc Data 
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 cases_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
 # GA input 
-pop_size = 10
-ngen = 10 
+pop_size = 10 # 500 
+ngen = 10 # 100 
 elitism_size = int(pop_size*10/100)
 cxpb = 1
 mutpb = 0.3
