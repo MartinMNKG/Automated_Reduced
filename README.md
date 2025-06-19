@@ -32,6 +32,12 @@ project/
 │   ├── main_launch_database_1DCF.py     # Launch 1D counterflow flame simulations
 │   └── main_calculate_fitness_0D.py     # Calculate fitness for 0D simulations
 │
+├── script_GA/
+│   ├── main_launch_GA_*.py       # Launch Genetic Algorithm
+│   ├── 00_VISU_AED.py            # Visualisation of Absolute Error distribution for different optimization
+│   ├── 00_VISU_FIT.py            # Visualisation of fitness function
+│   └── 00_VISU_0D.py             # Visualisation of 0D reactor at selected generation
+│
 └── README.md
 ```
 
@@ -127,6 +133,9 @@ This script sets all the simulation and GA parameters, then calls Launch_GA() fr
     - Name_Folder: output folder name.
 
     - Fitness: fitness function to use (e.g., Calculate_AED, Calculate_PMO, etc.).
+        - Type Fit : 
+            - Use 'Mini' for AED, PMO, ORCh 
+            - Use 'Maxi' for Brookesia (Mean or Max)
 
     - input_fitness: list of species to compare between mechanisms. If empty ([]), all species in the reduced mechanism are used.
 
@@ -163,3 +172,10 @@ This script sets all the simulation and GA parameters, then calls Launch_GA() fr
         - cxpb, mutpb: crossover and mutation probabilities.
 
     - Restart: if True, loads an existing population for continuation.
+
+    - Hardcoded : 
+        - Bounds : +- 10% from the Reduced values 
+        - Gaussian mutation : mu:0, sigma:1 , indpb:0.1
+        - Tournament size : 3
+        - Blend : 0.5
+         
