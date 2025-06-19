@@ -2,13 +2,16 @@ from deap import base, creator, tools, algorithms
 import numpy as np 
 from mpi4py import MPI
 import matplotlib.pyplot as plt
+
 import pandas as pd 
 import cantera as ct 
 import os 
 import re
 import pickle
 import csv 
+import glob
 import sys 
+import time 
 import random 
 import matplotlib
 
@@ -38,6 +41,7 @@ def Launch_GA(
     elitism_size : int, 
     cxpb,
     mutpb,
+    type_fit : str,
     Restart : bool
     ) : 
     
@@ -47,14 +51,18 @@ def Launch_GA(
 
 
     main_path = os.getcwd()
-    if rank == 0 & Restart == False  : # Create directory 
-        dir = os.path.join(main_path,Name_Folder)
-        os.makedirs(dir)
-        make_dir(dir)
+    dir = Name_Folder
+    if rank == 0 : 
+        
+        
+        if Restart == False  : # Create directory 
+            os.makedirs(dir,exist_ok=True)
+            make_dir(dir)
 
-
+             
     Detailed_gas = ct.Solution(Detailed_file)
     Reduced_gas = ct.Solution(Reduced_file)
+    
 
 
     if rank == 0 : 
@@ -96,41 +104,87 @@ def Launch_GA(
 
     def evaluate(individual): 
         new_gas = rxns_yaml_arr_list2_ln(Reduced_gas,individual)
+            
+        data = Sim0D(new_gas,new_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"","",False)
         
-        data = Sim0D(new_gas,new_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"Individual","",False)
-        Processing_Data = Processing_0D_data(data,Processing_Ref,cases_0D,"Individual","",False)
-        
+        Processing_Data = Processing_0D_data(data,Processing_Ref,cases_0D,f"","",False)
         Err =Fitness(Processing_Ref,Processing_Data,input_fitness,False)
         return Err, # Return tuple, Deap process 
+    
+    def evaluate_with_context(individual, gen, ind_index):
+        start_time_evaluate = time.time()
+        new_gas = rxns_yaml_arr_list2_ln(Reduced_gas, individual)
+    
 
-    def mpi_evaluate(population):
-        # Diviser la population entre les processus
-        chunk_size = len(population) // size
-        if rank == size - 1:
-            chunk = population[rank * chunk_size:]  # Dernier processus prend le reste
-        else:
-            chunk = population[rank * chunk_size:(rank + 1) * chunk_size]
+        data = Sim0D(new_gas, new_gas, fuel1, fuel2, oxidizer, cases_0D, dt, tmax, "", "", False)
+      
+        Processing_Data = Processing_0D_data(data, Processing_Ref, cases_0D, "", "", False)
         
-        # Évaluer le sous-ensemble assigné à ce processus
-        local_results = list(map(toolbox.evaluate, chunk))
-        
-        # Rassembler les résultats dans le processus maître
-        gathered_results = comm.gather(local_results, root=0)
-        
-        # Appliquer les résultats aux individus
+
+        Err = Fitness(Processing_Ref, Processing_Data, input_fitness, False)
+      
+        return Err,
+    
+
+    def mpi_evaluate(population, gen):
+        # Répartition round-robin des indices
+        indices = list(range(len(population)))
+        chunks = [indices[i::size] for i in range(size)]  # round-robin
+
+        # Chaque rank récupère ses indices + individus associés
+        local_indices = chunks[rank]
+        # print(f"RANK{rank},CHUNK : {chunks}")
+    
+        local_individuals = [population[i] for i in local_indices]
+
+    
+
+        local_results = [evaluate_with_context(ind, gen, i) for ind, i in zip(local_individuals, local_indices)]
+
+        gathered_results = comm.gather((local_indices, local_results), root=0)
+
         if rank == 0:
-            flat_results = [item for sublist in gathered_results for item in sublist]
-            for ind, fit in zip(population, flat_results):
-                ind.fitness.values = fit
-        comm.barrier()  # Synchronisation
+            for inds, fits in gathered_results:
+                for i, fit in zip(inds, fits):
+                    population[i].fitness.values = fit
+        comm.barrier()
 
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
+
+    # def mpi_evaluate(population):
+    #     # Diviser la population entre les processus
+    #     chunk_size = len(population) // size
+    #     if rank == size - 1:
+    #         chunk = population[rank * chunk_size:]  # Dernier processus prend le reste
+    #     else:
+    #         chunk = population[rank * chunk_size:(rank + 1) * chunk_size]
+        
+    #     # Évaluer le sous-ensemble assigné à ce processus
+    #     local_results = list(map(toolbox.evaluate, chunk))
+        
+    #     # Rassembler les résultats dans le processus maître
+    #     gathered_results = comm.gather(local_results, root=0)
+        
+    #     # Appliquer les résultats aux individus
+    #     if rank == 0:
+    #         flat_results = [item for sublist in gathered_results for item in sublist]
+    #         for ind, fit in zip(population, flat_results):
+    #             ind.fitness.values = fit
+    #     comm.barrier()  # Synchronisation
+        
+    if type_fit == "Mini" :
+        
+        creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMin)
+        
+    if type_fit == "Maxi" :
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
     toolbox.register("individual", lambda: creator.Individual(create_individual(bounds)))
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("evaluate", evaluate)
+    # toolbox.register("evaluate", evaluate)
+    toolbox.register("evaluate", evaluate_with_context)
     toolbox.register("mate", tools.cxBlend,alpha=0.5)
     toolbox.register("mutate", bounded_mutation, bounds=bounds, mu=0, sigma=1, indpb=0.1)
     toolbox.register("select", tools.selTournament, tournsize=3)
@@ -138,27 +192,42 @@ def Launch_GA(
 
 
     stats = tools.Statistics(lambda ind: ind.fitness.values[0])
-    stats.register("min", min)
+    if type_fit =="Mini" : 
+        stats.register("min", min)
+    if type_fit == "Maxi" : 
+        stats.register("max", max)
     stats.register("avg",lambda fits: sum(fits) / len(fits))
 
 
     ## Main 
   
     logbook = tools.Logbook()
-    logbook.header = ["gen", "nevals","min","avg"]
+    if type_fit =="Mini" : 
+        logbook.header = ["gen", "nevals","min","avg"]
+    if type_fit == "Maxi" : 
+        logbook.header = ["gen", "nevals","max","avg"]
+    
 
     if Restart == False : # Launch classic 
         ind_start = 1 
         population = toolbox.population(n=pop_size -1)
         special_inidivual = creator.Individual(init_value_factor) # Add Reduced as an individual
         population.append(special_inidivual)
-        mpi_evaluate(population)
+        
+        
+        with open(os.path.join(dir,"hist",f"population_0.pkl"), "wb") as f:
+            pickle.dump(population, f) # Dump population if restart needed 
+        mpi_evaluate(population,0)
 
         comm.barrier()
 
         if rank == 0 : 
             record = stats.compile(population)
             logbook.record(gen=0, nevals=len(population), **record)
+            fitness_file = os.path.join(dir, "hist", f"fitness_gen_0.txt")
+            with open(fitness_file, "w") as f_fit:
+                for ind in population:
+                    f_fit.write(f"{ind.fitness.values}\n") # Save fitness of pop at a each gen 
             
     else : # Take old population, and restart from 
         hist_path = os.path.join(dir,"hist")
@@ -168,52 +237,68 @@ def Launch_GA(
         with open(os.path.join(hist_path, last_population_file), "rb") as f:
                 population = pickle.load(f)
                 ind_start = int(re.search(r'\d+', last_population_file).group())
-
+                
     for gen in range(ind_start,ngen +1) : 
-        
+        start_time =time.time() 
         # Selection Best pop and keep it 
         if rank == 0 : 
-            elite = tools.selBest(population, elitism_size)
+            
+            
+            # elite = tools.selBest(population, elitism_size)
+            elite = list(map(toolbox.clone, tools.selBest(population, elitism_size)))
             offspring = toolbox.select(population, len(population) - elitism_size )
             offspring = list(map(toolbox.clone, offspring))
-        else : 
-            offspring = None
-        offspring = comm.bcast(offspring, root=0)
-        
-        # Create child 
-        for child1, child2 in zip(offspring[::2], offspring[1::2]):
+                
+            # Create child 
+            for child1, child2 in zip(offspring[::2], offspring[1::2]):
 
-            if random.random() < cxpb:
-                toolbox.mate(child1, child2)
-                del child1.fitness.values
-                del child2.fitness.values      
+                if random.random() < cxpb:
+                    toolbox.mate(child1, child2)
+                    del child1.fitness.values
+                    del child2.fitness.values      
+                
+            # Mutation Process 
+            for mutant in offspring:
+
+                if random.random() < mutpb:
+                    toolbox.mutate(mutant)
+                    del mutant.fitness.values
+                repair(mutant)
             
-        # Mutation Process 
-        for mutant in offspring:
-
-            if random.random() < mutpb:
-                toolbox.mutate(mutant)
-                del mutant.fitness.values
-            repair(mutant)
+        else : 
+            offspring = None 
+        offspring= comm.bcast(offspring,root=0)
             
         # Evaluate New individual 
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        mpi_evaluate(invalid_ind)   
+        # invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+
+        mpi_evaluate(offspring,gen)   
+        
         
         comm.barrier()  
         
         # Concatenate Elite with new Individual 
         if rank == 0 : 
-            population[:] = invalid_ind + elite
+            print(f"Time End GA : {time.time() - start_time}")
+            population[:] = offspring + elite
+            
+    
             with open(os.path.join(dir,"hist",f"population_{gen}.pkl"), "wb") as f:
                     pickle.dump(population, f) # Dump population if restart needed 
                     
+            fitness_file = os.path.join(dir, "hist", f"fitness_gen_{gen}.txt")
+            with open(fitness_file, "w") as f_fit:
+                for ind in population:
+                    f_fit.write(f"{ind.fitness.values}\n") # Save fitness of pop at a each gen 
+                                
             record = stats.compile(population)
-            logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+            logbook.record(gen=gen, nevals=len(offspring), **record)
             print(logbook.stream)
+            
             save_best = tools.selBest(population, 1)[0]
-            opt_gas = rxns_yaml_arr_list2_ln(Reduced_gas,save_best)
-            write_yaml(opt_gas ,os.path.join(dir,"mech",f"Mech_gen_{gen}.yaml"))
+            best_mech = rxns_yaml_arr_list2_ln(Reduced_gas,save_best)
+            write_yaml(best_mech ,os.path.join(dir,"mech",f"Mech_gen_{gen}.yaml"))
+            
             with open(os.path.join(dir, "hist", f"Output_mpi_gen{gen}.csv"), "w", newline="") as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(logbook.header)  # Write the header (columns)
@@ -229,6 +314,7 @@ def Launch_GA(
         
         
         write_yaml(opt_gas ,os.path.join(dir,f"/Best_Individual.yaml"))
+        opt_gas.write_yaml(os.path.join(dir,f"/Best_Individual_canteraapi.yaml"))
 
         generations = logbook.select("gen")
         min_fitness = logbook.select("min")

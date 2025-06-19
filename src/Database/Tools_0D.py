@@ -9,13 +9,13 @@ from .utils import Create_directory, concat_csv_list
 
 
 def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier,save) :
-    print(type) 
+    # print(type) 
     if save == True :
         dossier = Create_directory(dossier,type)
     all_df = pd.DataFrame()
-    print("P,T,Phi,Mix")
+    # print("P,T,Phi,Mix")
     for case in case_0D :
-        print(f"case :{case} ")
+        # print(f"case :{case} ")
         pressure, temperature, equivalence_ratio,mixture = case
         fuel_mix = f'{fuel1}:{mixture}, {fuel2}:{1-mixture}'
         t_gas.set_equivalence_ratio(equivalence_ratio,fuel_mix,oxidizer)

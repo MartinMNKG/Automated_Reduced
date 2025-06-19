@@ -33,7 +33,7 @@ def Calculate_AED_ML(data_d,data_r,input,flag_output) :
     Err["T"] = np.abs(data_d_log_scl["T"]-data_r_log_scl["T"])
     Err["IDT"] = np.abs(data_d_log_scl["IDT"]-data_r_log_scl["IDT"])
     Err_AED = np.sum(np.sum(Err,axis=0))
-    print(f"Err AED ML = {Err_AED:0.2E}")
+    # print(f"Err AED ML = {Err_AED:0.2E}")
     
     if flag_output == True : 
         return Err_AED, Err 
