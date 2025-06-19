@@ -27,8 +27,8 @@ oxidizer = "O2:0.21, N2:0.79, AR : 0.01"
 
 Detailed_file = "./data/detailed.yaml"
 Name_Ref = "Detailed"
-Reduced_file = "./data/reduced.yaml"
-Name_Data = "Reduced"
+Reduced_file = "./MECH_ORION/140_ORCH.yaml"
+Name_Data = "140_ORCH"
 
 gas_det = ct.Solution(Detailed_file)
 gas_red = ct.Solution(Reduced_file)

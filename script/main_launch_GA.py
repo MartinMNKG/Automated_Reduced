@@ -2,22 +2,25 @@ import os
 import sys 
 import numpy as np 
 
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 from Database.utils import generate_test_cases_bifuel
 from Fitness.AED import Calculate_AED
 from Fitness.AED_ML import Calculate_AED_ML
-from Fitness.Brookesia import Calculate_Brookesia
+# from Fitness.Brookesia import Calculate_Brookesia_MEAN, Calculate_Brookesia_MAX
 from Fitness.PMO import Calculate_PMO
 from Fitness.ORCH import Calculate_ORCH
 
 from GA.main_GA import Launch_GA 
 
 #Create Calcul Folder 
-Name_Folder = "GA_AED_ML_ALLSPECIES"
+Name_Folder = "Test_GA"
+
 
 # Fitness used 
 Fitness = Calculate_AED_ML
-input_fitness = [] # If empty, use all species of Reduced 
+input_fitness = []
+ 
 
 # Cantera inputs 
 Detailed_file = "/work/kotlarcm/WORK/Automated_Reduced/data/detailed.yaml"
@@ -32,17 +35,18 @@ dt= 1e-6
 length = 1000
 pressure_0D = np.linspace(1,1,1).tolist()
 temperature_0D = np.linspace(1300,1300,1).tolist() #1300 
-phi_0D = [0.5,1.5,6,13] # Luc Data 
+phi_0D = [1] # Luc Data 
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 cases_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
 # GA input 
 pop_size = 10 # 500 
-ngen = 10 # 100 
-elitism_size = int(pop_size*10/100)
+ngen = 4 # 100 
+elitism_size = 2 #int(pop_size*10/100)
 cxpb = 1
 mutpb = 0.3
 
+type_fit = "Mini" #for ORCH, AED, AEDML, PMO  //// Or Maxi for BROOKESIA
 Restart = False 
 
     
@@ -64,5 +68,6 @@ Launch_GA(
     elitism_size, 
     cxpb,
     mutpb,
+    type_fit,
     Restart
     ) 
