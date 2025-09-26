@@ -10,17 +10,39 @@ from Fitness.AED_ML import Calculate_AED_ML
 from Fitness.Brookesia import Calculate_Brookesia_MEAN, Calculate_Brookesia_MAX
 from Fitness.PMO import Calculate_PMO
 from Fitness.ORCH import Calculate_ORCH
+from Fitness.EEM import RE,ABS,RMSE,IE,RE_A
 
 from GA.main_GA import Launch_GA 
 
 #Create Calcul Folder 
-Name_Folder = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/CALCUL/SELECTED_SPECIES/BROOKESIA_MAX"
-
+Name_Folder = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/CALCUL/AEDML_VS_ORCH_NDB/ORCh"
 
 # Fitness used 
-Fitness = Calculate_Brookesia_MAX
-input_fitness = ["Y_NH3","Y_NH","Y_NO","Y_NNH","Y_HNO","Y_N2O","Y_H2","Y_H2O","Y_OH","Y_O","Y_H"]
- 
+Fitness = Calculate_ORCH # Choose fintess : 
+
+### Fitnes type AED Brookesia , PMO : 
+# input_fitness = ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO']
+
+### Fitnes type ORCh
+input_fitness = {
+"Y_NO": 6.0,
+"Y_NH": 3.5,
+"Y_NH2": 3.5,
+"Y_NNH": 5.0,
+"Y_H2": 3.0,
+"Y_NH3": 3.0,
+"Y_O2": 3.0,
+"Y_OH": 3.0,
+"Y_O": 3.0,
+"Y_H": 3.0
+}
+
+### Fitness Type EEM (RE,ABS ...)
+# input_fitness = {
+#     "species": ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO']
+#     "do_log" : True , #True or False
+#     "norm_type" : None, # "standard" or "minmax"
+# }
 
 # Cantera inputs 
 Detailed_file = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/data/detailed.yaml"
@@ -34,19 +56,19 @@ tmax = 0.1
 dt= 1e-6
 length = 1000
 pressure_0D = np.linspace(1,1,1).tolist()
-temperature_0D = np.linspace(1300,1300,1).tolist() #1300 
-phi_0D = [0.5,1.5,6,13] # Luc Data 
+temperature_0D = np.linspace(1000,1300,2).tolist() #1300 
+phi_0D = [0.5,1,1.5] # Luc Data  # Luc Data 
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 cases_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
 # GA input 
 pop_size = 64 # 500 
-ngen =500 # 100 
+ngen =4000 # 100 
 elitism_size = int(pop_size*10/100)
 cxpb = 1
-mutpb = 0.3
+mutpb = 0.5
 
-type_fit = "Maxi" #for ORCH, AED, AEDML, PMO  //// Or Maxi for BROOKESIA
+type_fit = "Mini" #for ORCH, AED, AEDML, PMO  //// Or Maxi for BROOKESIA
 Restart = False 
 
     

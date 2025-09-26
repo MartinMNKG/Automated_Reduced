@@ -7,10 +7,14 @@ import os
 
 def Calculate_AED_ML(data_d,data_r,input,flag_output) :
     
-    if isinstance(input, dict) and input:
-        species = input.keys()
+    eps = 1.0e-12
+    if isinstance(input, list) and input:
+        species = input
+        print(species)
     else:
         species = [col for col in data_r.columns if col.startswith("Y_")]
+    data_d[data_d< eps] = eps 
+    data_r[data_r< eps] = eps
     
     data_d_log=data_d[species].apply(np.log)  
     data_r_log=data_r[species].apply(np.log) 
@@ -30,8 +34,8 @@ def Calculate_AED_ML(data_d,data_r,input,flag_output) :
     Err = pd.DataFrame()       
     for s in species : 
         Err[s] = np.abs(data_d_log_scl[s]-data_r_log_scl[s])
-    Err["T"] = np.abs(data_d_log_scl["T"]-data_r_log_scl["T"])
-    Err["IDT"] = np.abs(data_d_log_scl["IDT"]-data_r_log_scl["IDT"])
+    # Err["T"] = np.abs(data_d_log_scl["T"]-data_r_log_scl["T"])
+    # Err["IDT"] = np.abs(data_d_log_scl["IDT"]-data_r_log_scl["IDT"])
     Err_AED = np.sum(np.sum(Err,axis=0))
     # print(f"Err AED ML = {Err_AED:0.2E}")
     

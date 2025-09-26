@@ -34,6 +34,15 @@ def Sim0D(t_gas,gas_eq,fuel1,fuel2,oxidizer,case_0D,dt,tmax,type,dossier,save) :
 
         states = ct.SolutionArray(t_gas, extra=["t"])
         
+        # POUR NH3 H2 ARTICLE MARTIN 
+        if temperature== 1000 : 
+            tmax = 0.06
+        elif temperature == 1200 :
+            tmax = 0.005
+        elif temperature == 1400 : 
+            tmax = 0.0015
+            
+            
         while time <tmax:
             time +=dt
             sim.advance(time)
@@ -90,9 +99,10 @@ def Processing_0D_ref(
         
         
         ind = find_convergence_index(data_loc["T"])
-        New_data_ref["common_grid"] = Generate_common_grid(
-            data_loc["t"].iloc[:ind], data_loc["T"].iloc[:ind], length
-        )
+        # New_data_ref["common_grid"] = Generate_common_grid(
+        #     data_loc["t"].iloc[:ind], data_loc["T"].iloc[:ind], length
+        # )
+        New_data_ref["common_grid"] = np.linspace(min(data_loc["t"]), max(data_loc["t"]), length)
 
         for s in species:
             int_func = interp1d(data_loc["t"], data_loc[s], fill_value="extrapolate")

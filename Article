@@ -1,0 +1,83 @@
+Problématique 
+
+Comment bien definir l'évaluation de performance d'un schéma réduit par rapport au schéma détaillé 
+De nombreux papier se sont penchér sur la réduction et l'optimisation d'un schéma de combustion détaillé
+afin de produire un schéma dit réduit dont les performances sont proches de celle dont il est issu. La réduction et
+l'optimisation repose sur le même principe qui est l'evaluation des simulations simulé par un nouveau schéma (crée par suppression d'une espèces 
+ou par modification des constantes des loi d'Arrhenius) par rapport au simulation issue du schéma détaillé. Cette evaluation diffère  
+en fonction des papiers publié. Certains observe les profiles temporel ou spatiale de la température ou des espèces des deux schéma comparé. Pendant que d'autre mettent au point des fonction d'évaluation permettant d'obtenir un critère de performance basé sur un nombre de données finis. La question se porte essentiellement sur ces fonction d'évaluation. Elles sont utilisé dans différents processus que ce soit la réductions ou l'optimization mais ne sont jamais les même d'un logiciel a l'autre, d'un papier à l'autre. La question des performances de ses fonctions d'evaluation se pose 
+
+
+
+
+1er Processing ==> lire les csv ou df , qui va appeler d'autre processing (0D, 1Dpmx, 1Dcf) qui retroune les df , processing global qui retourne les concatener 
+
+Taille des base de données 
+
+
+Changement du traitement de D , 
+Processing_0D_data_ref
+
+Proceesing_0D_data 
+
+pour cette semaine ==> Objectif 
+Version Carré et robuste pour les 3 types de réacteurs (0D, CF,PMX)
+Otpim sur toute la base de données (qui peut le plus peu le moins) 
+
+
+Temps de calcul flamme extinction / no extinction 
+
+0D / 1D ==> 
+Demander les conditions à Lucia / Luc 
+
+Temps simu CF pour 2 temperature : 
+
+Time simu Ref = 418.89 s
+Time simu Data = 94.33 s
+Time Process Ref = 0.47 s
+Time Process Data = 0.25 s
+
+
+0D REACTOR : 25 Reacteurs 
+Time simu Ref = 28.54 s
+Time simu Data = 20.18 s 
+Time Process Ref = 59.61 s
+Time Process Data = 1.60 s
+Tot = 109 s
+
+
+1DPMX : 16 Flammes 
+Time simu Ref = 257.06 s
+Time simu Data = 44.55 s
+Time Process Ref = 0.93 s
+Time Process Data = 0.27 s
+Tot = 302
+
+
+1DCF : Jusqu'à l'extinction (7-10 flammes simulé en fonction des schéma/T_init oxydant)
+Time simu Ref = 416.00 s
+Time simu Data = 90.08 s
+Time Process Ref = 0.49 s
+Time Process Data = 0.23 s
+Tot = 506 s
+
+Tot full Database = 918 s (15 min) 
+
+La temperature Fuel peux varier pour le CF (a rajouter)  CHECK 
+
+
+cas = toute les esp�ces 
+cas = liste d'esp�ce que tu rentres a la main (majoritaire, polluant) 
+Faire une seule input 
+AED Brookesia = j'ai besoin d'une liste, == keys 
+et dans Orch j'utilise les coefficients 
+
+Dans un PSR : r�acteurs plus lent , impos� le profile de temp�rature/ laisser vivre sa vie, mettre des pertes thermiques 
+Tube a choc : laisse vivre sa vie 
+
+
+Petite Base : Une optim par fitness / Full esp�ce et S�l�ction Esp�ce 
+2 trucs a faire : 
+
+Main_optim ==> Dans le rep d'ou tu lances tes calculs 
+(un main / otpim), dump les entr�es dans le rep de calculs
