@@ -10,7 +10,6 @@ def Calculate_AED_ML(data_d,data_r,input,flag_output) :
     eps = 1.0e-12
     if isinstance(input, list) and input:
         species = input
-        print(species)
     else:
         species = [col for col in data_r.columns if col.startswith("Y_")]
     data_d[data_d< eps] = eps 

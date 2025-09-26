@@ -15,38 +15,38 @@ from Fitness.EEM import RE,ABS,RMSE,IE,RE_A
 from GA.main_GA import Launch_GA 
 
 #Create Calcul Folder 
-Name_Folder = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/CALCUL/AEDML_VS_ORCH_NDB/ORCh"
+Name_Folder = "/work/kotlarcm/WORK/Automated_Reduced/Test_RMSE"
 
 # Fitness used 
-Fitness = Calculate_ORCH # Choose fintess : 
+Fitness = RMSE # Choose fintess : 
 
 ### Fitnes type AED Brookesia , PMO : 
 # input_fitness = ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO']
 
 ### Fitnes type ORCh
-input_fitness = {
-"Y_NO": 6.0,
-"Y_NH": 3.5,
-"Y_NH2": 3.5,
-"Y_NNH": 5.0,
-"Y_H2": 3.0,
-"Y_NH3": 3.0,
-"Y_O2": 3.0,
-"Y_OH": 3.0,
-"Y_O": 3.0,
-"Y_H": 3.0
-}
-
-### Fitness Type EEM (RE,ABS ...)
 # input_fitness = {
-#     "species": ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO']
-#     "do_log" : True , #True or False
-#     "norm_type" : None, # "standard" or "minmax"
+# "Y_NO": 6.0,
+# "Y_NH": 3.5,
+# "Y_NH2": 3.5,
+# "Y_NNH": 5.0,
+# "Y_H2": 3.0,
+# "Y_NH3": 3.0,
+# "Y_O2": 3.0,
+# "Y_OH": 3.0,
+# "Y_O": 3.0,
+# "Y_H": 3.0
 # }
 
+### Fitness Type EEM (RE,ABS ...)
+input_fitness = {
+    "species": ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO'],
+    "do_log" : True, #True or False
+    "norm_type" : None, # "standard" or "minmax"
+}
+
 # Cantera inputs 
-Detailed_file = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/data/detailed.yaml"
-Reduced_file = "/home/irsrvhome1/R11/kotlarcm/WORK/OPTIM/data/reduced.yaml"
+Detailed_file = "/work/kotlarcm/WORK/Automated_Reduced/data/detailed.yaml"
+Reduced_file = "/work/kotlarcm/WORK/Automated_Reduced/data/reduced.yaml"
 fuel1 = "NH3"
 fuel2 = "H2"
 oxidizer = "O2:0.21, N2:0.78, AR : 0.01"
@@ -56,15 +56,15 @@ tmax = 0.1
 dt= 1e-6
 length = 1000
 pressure_0D = np.linspace(1,1,1).tolist()
-temperature_0D = np.linspace(1000,1300,2).tolist() #1300 
-phi_0D = [0.5,1,1.5] # Luc Data  # Luc Data 
+temperature_0D = np.linspace(1000,1000,1).tolist() #1300 
+phi_0D = [1] # Luc Data  # Luc Data 
 mixture_0D =np.linspace(0.85,0.85,1).tolist()
 cases_0D = generate_test_cases_bifuel(pressure_0D,temperature_0D,phi_0D,mixture_0D)
     
 # GA input 
-pop_size = 64 # 500 
-ngen =4000 # 100 
-elitism_size = int(pop_size*10/100)
+pop_size = 10 # 500 
+ngen =10 # 100 
+elitism_size = 1 #int(pop_size*10/100)
 cxpb = 1
 mutpb = 0.5
 

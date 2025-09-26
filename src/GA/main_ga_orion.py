@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 from GA.Tools import get_factor_dim_ln, rxns_yaml_arr_list2_ln,make_dir, write_yaml
 from Database.Tools_0D import Sim0D,Processing_0D_ref,Processing_0D_data
-from Fitness.EEM import RE,RE_A,ABS,RMSE,IE
 
 
 def Launch_GA(
@@ -64,21 +63,15 @@ def Launch_GA(
     Detailed_gas = ct.Solution(Detailed_file)
     Reduced_gas = ct.Solution(Reduced_file)
     
-    special_fit = (ABS,RE,RE_A,RMSE,IE) ### For input gestion only (EEM fitness type)
 
 
     if rank == 0 : 
         if Restart == False : # Launch simulation with Detailed mech 
-            data_ref = Sim0D(Detailed_gas,Detailed_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"","",False)
-            data_start = Sim0D(Reduced_gas,Reduced_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"","",False)
+            data_ref = Sim0D(Detailed_gas,Detailed_gas,fuel1,fuel2,oxidizer,cases_0D,dt,tmax,"Detailed","",False)
             Processing_Ref  = Processing_0D_ref(data_ref,cases_0D,length,"Detailed",dir,True) # Return all sim process into 1 datafram 
-            Processing_start = Processing_0D_data(data_start, Processing_Ref, cases_0D, "Start",dir, True)
-                
         else :  # Load Processing detailed simulation 
             Processing_Ref = pd.read_csv(os.path.join(dir,"Processing_Detailed.csv"))
-            Processing_start = pd.read_csv(os.path.join(dir,"Processing_Start.csv"))
-
-    else :  
+    else : 
         data_ref = None 
         Processing_Ref = None 
     comm.barrier() 
@@ -127,19 +120,8 @@ def Launch_GA(
       
         Processing_Data = Processing_0D_data(data, Processing_Ref, cases_0D, "", "", False)
         
-        
-        
-        if Fitness in special_fit  : # Fit type EEM 
-            list_spec = input_fitness.get("species")
-            do_log = input_fitness.get("do_log")
-            norm_type = input_fitness.get("norm_type")
-            
-            Err = Fitness(Processing_Ref,Processing_Data,list_spec,False,do_log,norm_type)
-            
-        else : # Fit Type ORCH , PMO, Brookesia
-            Err = Fitness(Processing_Ref, Processing_Data, input_fitness, False)
-        
-        print(Err)
+
+        Err = Fitness(Processing_Ref, Processing_Data, input_fitness, False)
       
         return Err,
     
@@ -167,6 +149,27 @@ def Launch_GA(
                     population[i].fitness.values = fit
         comm.barrier()
 
+
+    # def mpi_evaluate(population):
+    #     # Diviser la population entre les processus
+    #     chunk_size = len(population) // size
+    #     if rank == size - 1:
+    #         chunk = population[rank * chunk_size:]  # Dernier processus prend le reste
+    #     else:
+    #         chunk = population[rank * chunk_size:(rank + 1) * chunk_size]
+        
+    #     # Évaluer le sous-ensemble assigné à ce processus
+    #     local_results = list(map(toolbox.evaluate, chunk))
+        
+    #     # Rassembler les résultats dans le processus maître
+    #     gathered_results = comm.gather(local_results, root=0)
+        
+    #     # Appliquer les résultats aux individus
+    #     if rank == 0:
+    #         flat_results = [item for sublist in gathered_results for item in sublist]
+    #         for ind, fit in zip(population, flat_results):
+    #             ind.fitness.values = fit
+    #     comm.barrier()  # Synchronisation
         
     if type_fit == "Mini" :
         
@@ -180,6 +183,7 @@ def Launch_GA(
     toolbox = base.Toolbox()
     toolbox.register("individual", lambda: creator.Individual(create_individual(bounds)))
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    # toolbox.register("evaluate", evaluate)
     toolbox.register("evaluate", evaluate_with_context)
     toolbox.register("mate", tools.cxBlend,alpha=0.5)
     toolbox.register("mutate", bounded_mutation, bounds=bounds, mu=0, sigma=1, indpb=0.1)
@@ -281,7 +285,12 @@ def Launch_GA(
     
             with open(os.path.join(dir,"hist",f"population_{gen}.pkl"), "wb") as f:
                     pickle.dump(population, f) # Dump population if restart needed 
-                                    
+                    
+            # fitness_file = os.path.join(dir, "hist", f"fitness_gen_{gen}.txt")
+            # with open(fitness_file, "w") as f_fit:
+            #     for ind in population:
+            #         f_fit.write(f"{ind.fitness.values}\n") # Save fitness of pop at a each gen 
+                                
             record = stats.compile(population)
             logbook.record(gen=gen, nevals=len(offspring), **record)
             print(logbook.stream)
@@ -319,4 +328,4 @@ def Launch_GA(
         plt.legend()
         plt.grid(True)
         plt.savefig(os.path.join(dir,f"Fitness.png"))
-        
+        plt.figure() 
