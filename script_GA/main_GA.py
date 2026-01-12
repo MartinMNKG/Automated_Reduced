@@ -39,7 +39,7 @@ Fitness = RMSE # Choose fintess :
 
 ### Fitness Type EEM (RE,ABS ...)
 input_fitness = {
-    "species": ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO'],
+    "species": ['Y_NH3', 'Y_H2', 'Y_O2', 'Y_H2O', 'Y_NO', 'Y_NO2', 'Y_N2O',  'Y_NNH', 'Y_HNO',"Y_N2"],
     "do_log" : True, #True or False
     "norm_type" : None, # "standard" or "minmax"
 }
